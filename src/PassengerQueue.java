@@ -48,13 +48,10 @@ public class PassengerQueue {
             int currentPassenger = (i+head)%maxSize;
             if(queue[currentPassenger].getSeatNum() == seatNum && queue[currentPassenger].getFullName() == fullName) {
                 dltPassenger = queue[currentPassenger];
-                for(int j = i; j < maxSize; j++) {
-                    queue[j%maxSize] = queue[(j+1)%maxSize];
-                    if(tail == (j+1)%maxSize) {
-                        tail--;
-                        break;
-                    }
+                for(int j = 0; j < size; j++) {
+                    queue[(j+currentPassenger)%maxSize] = queue[(j+currentPassenger+1)%maxSize];
                 }
+                tail--;
                 size--;
                 break;
             }
