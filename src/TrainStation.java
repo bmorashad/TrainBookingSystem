@@ -1,18 +1,17 @@
 import javafx.application.Application;
-import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import javax.swing.plaf.nimbus.State;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
@@ -47,6 +46,9 @@ public class TrainStation extends Application {
                     break;
                 case "a":
                     addToTrainQueue();
+                    break;
+                case "t":
+                    makeTable();
                     break;
                 case "q":
                     exit = true;
@@ -182,7 +184,7 @@ public class TrainStation extends Application {
                 totalAdded = addToQueueFromWaitingRoom(totalAdded, passengersToQueue);
             }
             if(totalAdded == 0 && !trainQueue.isFull()) {
-                System.out.println("No passengers were added since there are no passengers left to add");
+                System.out.println("No passengers were added");
             }
         } else if(boardFrom == waitingRoom.length-1){
             System.out.println("There are no passengers left to add");
@@ -191,6 +193,61 @@ public class TrainStation extends Application {
         }
 //        System.out.println(totalAdded);
     }
+
+    public void showQueue() {
+    }
+    public void makeTable() {
+        Passenger[] passengersInQueue = trainQueue.getQueue();
+        bubbleSortArr(passengersInQueue);
+        System.out.println(Arrays.toString(passengersInQueue));
+
+
+        TableView<Passenger> tb = new TableView<>();
+
+        TableColumn<Passenger, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setMinWidth(200);
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+
+        TableColumn<Passenger, Integer> seatColumn = new TableColumn<>("Seat");
+        seatColumn.setMinWidth(200);
+        seatColumn.setCellValueFactory(new PropertyValueFactory<>("seatNum"));
+
+        TableColumn<Passenger, String> startStationColumn = new TableColumn<>("Start");
+        startStationColumn.setMinWidth(200);
+        startStationColumn.setCellValueFactory(new PropertyValueFactory<>("startStation"));
+
+        TableColumn<Passenger, String> endStationColumn = new TableColumn<>("End");
+        endStationColumn.setMinWidth(200);
+        endStationColumn.setCellValueFactory(new PropertyValueFactory<>("endStation"));
+
+        ObservableList<Passenger> passengers = FXCollections.observableArrayList();
+        for(int i = 0; i < passengersInQueue.length - 1; i++) {
+            passengers.add(passengersInQueue[i]);
+            int currentSeat = passengersInQueue[i].getSeatNum();
+            int nextSeat = passengersInQueue[i+1].getSeatNum();
+            int upTo = nextSeat - currentSeat;
+            for(int j = 1; j < upTo; j++) {
+                if(seatStat[passengersInQueue[i].getSeatNum()+j-1] == -1) {
+                    passengers.add(BOOKED_PASSENGERS[passengersInQueue[i].getSeatNum()+j - 1]);
+                }
+            }
+        }
+        passengers.add(passengersInQueue[passengersInQueue.length-1]);
+        System.out.println(passengers.get(0));
+        tb.setItems(passengers);
+        tb.getColumns().addAll(nameColumn, seatColumn, startStationColumn, endStationColumn);
+
+
+
+        VBox vBox = new VBox();
+        vBox.getChildren().add(tb);
+
+        Scene scene = new Scene(vBox, 600, 600);
+        Stage st = new Stage();
+        st.setScene(scene);
+        st.showAndWait();
+    }
+
 
 
 
@@ -316,4 +373,27 @@ public class TrainStation extends Application {
         }
         return alreadyAdded;
     }
+
+    public <T extends Comparable<T>> T[] bubbleSortArr(T[] arr) {
+        boolean isNoSorted = true;
+        int inOrder = 0;
+        while (isNoSorted) {
+            boolean isSwapped = false;
+            for(int i = 0; i < arr.length-inOrder-1; i++) {
+                Integer currentNum = i;
+                Integer nextNum = i+1;
+                if(arr[currentNum].compareTo(arr[nextNum]) > 0) {
+                    T temp = arr[currentNum];
+                    arr[currentNum] = arr[nextNum];
+                    arr[nextNum] = temp;
+                    isSwapped = true;
+                }
+            }
+            inOrder += 1;
+            isNoSorted = isSwapped;
+        }
+        return arr;
+    }
+
+
 }
