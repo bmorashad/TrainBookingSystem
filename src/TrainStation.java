@@ -140,19 +140,9 @@ public class TrainStation extends Application {
         int passengersToQueue = rd.nextInt(5) + 1;
         System.out.println(passengersToQueue + " Passengers can be added");
         boolean isConfirmed = confirm("Are you sure you want to add " + passengersToQueue + " passengers to queue");
-        int totalAdded = 0;
+        int totalAdded;
         if(boardFrom < waitingRoom.length || !lateComers.isEmpty()) {
-            if (!lateComers.isEmpty()) {
-                    for (int i = 0; i < lateComers.size(); i++) {
-                        addToPassengerQueue(lateComers.get(i), trainQueue, totalAdded);
-                        seatStat[lateComers.get(i).getSeatNum() - 1] = 2;
-                        totalAdded += 1;
-                        if (totalAdded >= passengersToQueue) {
-                            System.out.println("All the passengers were added successfully");
-                            break;
-                        }
-                    }
-            }
+            totalAdded = addLateComersToQueue(passengersToQueue);
             if (totalAdded < passengersToQueue && boardFrom < waitingRoom.length) {
                 try {
                     for (int i = boardFrom; i < waitingRoom.length; i++) {
@@ -239,5 +229,21 @@ public class TrainStation extends Application {
         } catch (Exception e) {
             System.out.println(totalAdded + " Passengers added, since the queue is full");
         }
+    }
+
+    private int addLateComersToQueue(int passengersToQueue) {
+        int totalAdded = 0;
+        if (!lateComers.isEmpty()) {
+            for (int i = 0; i < lateComers.size(); i++) {
+                addToPassengerQueue(lateComers.get(i), trainQueue, totalAdded);
+                seatStat[lateComers.get(i).getSeatNum() - 1] = 2;
+                totalAdded += 1;
+                if (totalAdded >= passengersToQueue) {
+                    System.out.println("All the passengers were added successfully");
+                    break;
+                }
+            }
+        }
+        return totalAdded;
     }
 }
