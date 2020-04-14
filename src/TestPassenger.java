@@ -1,4 +1,6 @@
-public class TestPassenger implements Comparable<TestPassenger>{
+import java.io.Serializable;
+
+public class TestPassenger implements Comparable<TestPassenger>, Serializable {
     private static int maxSecondsInQueue;
     private String fullName;
     private int seatNum;
@@ -77,4 +79,6 @@ public class TestPassenger implements Comparable<TestPassenger>{
     public int compareTo(TestPassenger other) {
         return Integer.compare(this.seatNum, other.seatNum);
     }
+
+
 }

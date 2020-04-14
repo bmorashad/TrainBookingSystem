@@ -82,6 +82,14 @@ public class PassengerQueue {
         }
     }
 
+    public Passenger[] getQueue() {
+        Passenger[] queue = new Passenger[size];
+        for(int i = 0; i < size; i++) {
+             queue[i] = this.queue[i+head%maxSize];
+        }
+        return queue;
+    }
+
     //helper methods
 
     // can improve to check only within queue size

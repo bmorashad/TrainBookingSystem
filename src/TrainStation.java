@@ -1,4 +1,8 @@
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -11,6 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -198,8 +203,8 @@ public class TrainStation extends Application {
     }
     public void makeTable() {
         Passenger[] passengersInQueue = trainQueue.getQueue();
-        bubbleSortArr(passengersInQueue);
         System.out.println(Arrays.toString(passengersInQueue));
+        bubbleSortArr(passengersInQueue);
 
 
         TableView<Passenger> tb = new TableView<>();
@@ -207,18 +212,22 @@ public class TrainStation extends Application {
         TableColumn<Passenger, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setMinWidth(200);
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+        nameColumn.setSortable(false);
 
         TableColumn<Passenger, Integer> seatColumn = new TableColumn<>("Seat");
         seatColumn.setMinWidth(200);
         seatColumn.setCellValueFactory(new PropertyValueFactory<>("seatNum"));
+        seatColumn.setSortable(false);
 
         TableColumn<Passenger, String> startStationColumn = new TableColumn<>("Start");
         startStationColumn.setMinWidth(200);
         startStationColumn.setCellValueFactory(new PropertyValueFactory<>("startStation"));
+        startStationColumn.setSortable(false);
 
         TableColumn<Passenger, String> endStationColumn = new TableColumn<>("End");
         endStationColumn.setMinWidth(200);
         endStationColumn.setCellValueFactory(new PropertyValueFactory<>("endStation"));
+        endStationColumn.setSortable(false);
 
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         for(int i = 0; i < passengersInQueue.length - 1; i++) {
@@ -232,12 +241,56 @@ public class TrainStation extends Application {
                 }
             }
         }
-        passengers.add(passengersInQueue[passengersInQueue.length-1]);
-        System.out.println(passengers.get(0));
+        if(passengersInQueue.length != 0) {
+            passengers.add(passengersInQueue[passengersInQueue.length - 1]);
+        }
+        if(boardFrom-1 != passengersInQueue[passengersInQueue.length - 1].getSeatNum()) {
+            int lastBoarded = passengersInQueue[passengersInQueue.length-1].getSeatNum();
+            int lastInBoardingGrp = boardFrom;
+            int difference = lastInBoardingGrp - lastBoarded;
+            for(int i = 1; i < difference; i++) {
+                if(seatStat[lastBoarded+i-1] == -1) {
+                    passengers.add(BOOKED_PASSENGERS[lastBoarded+i-1]);
+                }
+            }
+        }
+
         tb.setItems(passengers);
         tb.getColumns().addAll(nameColumn, seatColumn, startStationColumn, endStationColumn);
 
 
+
+//        ObjectProperty<Passenger> p = new SimpleObjectProperty<>();
+
+
+        Callback<TableColumn<Passenger, Integer>, TableCell<Passenger, Integer>> cellFactory
+                = //
+                new Callback<TableColumn<Passenger, Integer>, TableCell<Passenger, Integer>>() {
+                    @Override
+                    public TableCell<Passenger, Integer> call(final TableColumn<Passenger, Integer> param) {
+                        final TableCell<Passenger, Integer> cell = new TableCell<Passenger, Integer>() {
+
+                            @Override
+                            public void updateItem(Integer item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (empty) {
+                                    setGraphic(null);
+                                    setText(null);
+                                } else {
+                                    setText(Integer.toString(item));
+                                    TableRow<Passenger> row = getTableRow();
+                                    if (seatStat[row.getItem().getSeatNum() - 1] == -1) {
+                                        row.getStyleClass().clear();
+                                        row.setStyle("-fx-background-color: #ffbfbc");
+                                    }
+                                }
+                            }
+                        };
+                        return cell;
+                    }
+                };
+
+        seatColumn.setCellFactory(cellFactory);
 
         VBox vBox = new VBox();
         vBox.getChildren().add(tb);
