@@ -1,5 +1,6 @@
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -19,7 +20,7 @@ import java.util.*;
 
 public class TrainStation extends Application {
     public final String STATION = "Colombo";
-    private int boardFrom = 0;
+    private int boardFrom = -1;
     // 1 - arrived, -1 - not-arrived, 0 - not-booked
     private final int[] seatStat = new int[42];
     public final Passenger[] BOOKED_PASSENGERS = getBookedPassengers("../CWTEST@latest/data/cTob_booking_detail.txt", LocalDate.parse("2020-04-16"));
@@ -39,11 +40,13 @@ public class TrainStation extends Application {
             Scanner sc = new Scanner(System.in);
             System.out.println("Enter option: ");
             String option = sc.nextLine();
+//            String option = "a";
             switch (option.toLowerCase()) {
                 case "w":
                     addArrivedPassengers();
                     break;
                 case "a":
+                    addToTrainQueue();
                     break;
                 case "q":
                     exit = true;
@@ -92,7 +95,7 @@ public class TrainStation extends Application {
         Label lbl = new Label("Add arrived passengers to waiting room");
         lbl.setTextFill(Color.web("blue"));
         lbl.setStyle("-fx-font-size: 18px");
-        GridPane.setConstraints(lbl, 0, 1);
+        GridPane.setConstraints(lbl, 0, 0);
         GridPane.setColumnSpan(lbl,6);
         grid.getChildren().add(lbl);
 
@@ -104,8 +107,37 @@ public class TrainStation extends Application {
         GridPane.setConstraints(quit, 6, 9);
         grid.getChildren().add(quit);
 
+        Label grey = new Label();
+        grey.setMinSize(15, 15);
+        grey.setMaxSize(15, 15);
+        grey.setStyle("-fx-background-color: #b8b8b8");
+        GridPane.setHalignment(grey, HPos.LEFT);
+        GridPane.setConstraints(grey, 0, 1);
+        grid.getChildren().add(grey);
+
+        Label greyInfo = new Label("not-booked");
+        GridPane.setHalignment(greyInfo, HPos.LEFT);
+        GridPane.setConstraints(greyInfo, 0, 2);
+        GridPane.setColumnSpan(greyInfo, 2);
+        grid.getChildren().add(greyInfo);
+
+        Label green = new Label();
+        green.setMinSize(15, 15);
+        green.setMaxSize(15, 15);
+        green.setStyle("-fx-background-color: #07b100");
+        GridPane.setHalignment(green, HPos.LEFT);
+//        GridPane.setColumnSpan(green, 2);
+        GridPane.setConstraints(green, 6, 1);
+        grid.getChildren().add(green);
+
+        Label greenInfo = new Label("arrived");
+        GridPane.setHalignment(greenInfo, HPos.LEFT);
+        GridPane.setConstraints(greenInfo, 6, 2);
+//        GridPane.setColumnSpan(greenInfo, 2);
+        grid.getChildren().add(greenInfo);
+
         final List<Integer> toBeReserved = new ArrayList<>();
-        for(int i = 0, c = 0, r = 1; i < BOOKED_PASSENGERS.length; i++) {
+        for(int i = 0, c = 0, r = 2; i < BOOKED_PASSENGERS.length; i++) {
             if(i % 7 == 0) {
                 r += 1;
                 c = 0;
@@ -132,22 +164,27 @@ public class TrainStation extends Application {
         });
 
         stage.setTitle("Add arrived passengers to waiting room");
-        popGui(stage, grid, 400, 400);
+        popGui(stage, grid, 600, 600);
     }
 
-    public void addToQueue() {
+    public void addToTrainQueue() {
         Random rd = new Random();
-        int passengersToQueue = rd.nextInt(5) + 1;
+        int passengersToQueue = rd.nextInt(6) + 1;
         System.out.println(passengersToQueue + " Passengers can be added");
         boolean isConfirmed = confirm("Are you sure you want to add " + passengersToQueue + " passengers to queue");
         int totalAdded;
-        if(boardFrom < waitingRoom.length || !lateComers.isEmpty()) {
+        if(boardFrom != -1 || !lateComers.isEmpty()) {
             totalAdded = addLateComersToQueue(passengersToQueue);
             if (totalAdded < passengersToQueue && boardFrom < waitingRoom.length) {
-                addToQueueFromWaitingRoom(totalAdded, passengersToQueue);
+                totalAdded = addToQueueFromWaitingRoom(totalAdded, passengersToQueue);
             }
-        } else {
+            if(totalAdded < passengersToQueue) {
+                System.out.println(totalAdded + " Passengers were added since there's no passengers left to add");
+            }
+        } else if(boardFrom == waitingRoom.length-1){
             System.out.println("There are no passengers left to add");
+        } else {
+            System.out.println("There are no passengers in the waiting room to add");
         }
     }
 
@@ -158,7 +195,7 @@ public class TrainStation extends Application {
         Scanner sc = new Scanner(System.in);
         System.out.println(message);
         String isConfirmed = sc.nextLine();
-        if(isConfirmed.equalsIgnoreCase("y")) {
+        if(isConfirmed.equalsIgnoreCase("y") || isConfirmed.equalsIgnoreCase("yes")) {
             return true;
         }
         return false;
@@ -172,6 +209,9 @@ public class TrainStation extends Application {
                     lateComers.add(BOOKED_PASSENGERS[seatNum-1]);
                 } else {
                     waitingRoom[seatNum-1] = BOOKED_PASSENGERS[seatNum-1];
+                }
+                if(boardFrom < 0) {
+                    boardFrom = 0;
                 }
                 seatStat[seatNum-1] = 1;
             }
@@ -230,11 +270,11 @@ public class TrainStation extends Application {
         }
         return totalAdded;
     }
-    private void addToQueueFromWaitingRoom(int totalAdded, int passengersToQueue) {
+    private int addToQueueFromWaitingRoom(int totalAdded, int passengersToQueue) {
         for (int i = boardFrom; i < waitingRoom.length; i++) {
             if (waitingRoom[i] != null) {
                 addToPassengerQueue(waitingRoom[i], trainQueue, totalAdded);
-                seatStat[lateComers.get(i).getSeatNum() - 1] = 2;
+                seatStat[waitingRoom[i].getSeatNum() - 1] = 2;
                 totalAdded += 1;
             }
             if (totalAdded >= passengersToQueue) {
@@ -243,5 +283,6 @@ public class TrainStation extends Application {
             }
             boardFrom += 1;
         }
+        return totalAdded;
     }
 }
