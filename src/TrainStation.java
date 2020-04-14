@@ -144,22 +144,17 @@ public class TrainStation extends Application {
         if(boardFrom < waitingRoom.length || !lateComers.isEmpty()) {
             totalAdded = addLateComersToQueue(passengersToQueue);
             if (totalAdded < passengersToQueue && boardFrom < waitingRoom.length) {
-                try {
-                    for (int i = boardFrom; i < waitingRoom.length; i++) {
-                        if (waitingRoom[i] != null) {
-                            trainQueue.enqueue(waitingRoom[i]);
-                            seatStat[lateComers.get(i).getSeatNum() - 1] = 2;
-                            totalAdded += 1;
-                        }
-                        if (totalAdded >= passengersToQueue) {
-                            System.out.println("All the passengers were added successfully");
-                            break;
-                        }
-                        boardFrom += 1;
+                for (int i = boardFrom; i < waitingRoom.length; i++) {
+                    if (waitingRoom[i] != null) {
+                        addToPassengerQueue(waitingRoom[i], trainQueue, totalAdded);
+                        seatStat[lateComers.get(i).getSeatNum() - 1] = 2;
+                        totalAdded += 1;
                     }
-                } catch (Exception e) {
-                    System.out.println(totalAdded + " Passengers added, since the queue is full");
-                    e.printStackTrace();
+                    if (totalAdded >= passengersToQueue) {
+                        System.out.println("All the passengers were added successfully");
+                        break;
+                    }
+                    boardFrom += 1;
                 }
             }
         } else {
@@ -246,4 +241,5 @@ public class TrainStation extends Application {
         }
         return totalAdded;
     }
+
 }
