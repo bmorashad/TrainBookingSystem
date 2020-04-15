@@ -387,6 +387,7 @@ public class TrainStation extends Application {
             }
         } catch (Exception e) {
             System.out.println(totalAdded + " Passengers added, since the queue is full");
+            totalAdded = passengersToQueue;
 //            e.printStackTrace();
         }
         return totalAdded;
@@ -409,6 +410,7 @@ public class TrainStation extends Application {
                 if (waitingRoom[boardFrom] != null) {
                     trainQueue.enqueue(waitingRoom[boardFrom]);
                     seatStat[waitingRoom[boardFrom].getSeatNum() - 1] = 2;
+                    waitingRoom[boardFrom] = null;
                     alreadyAdded += 1;
                 }
                 boardFrom += 1;
@@ -421,8 +423,8 @@ public class TrainStation extends Application {
 //                System.out.println(totalAdded + " Passengers were added since there's no passengers left to add");
 //            }
         } catch (Exception e) {
-            e.printStackTrace();
             System.out.println(totalAdded + " Passengers added, since the queue is full");
+            e.printStackTrace();
         }
         return alreadyAdded;
     }
