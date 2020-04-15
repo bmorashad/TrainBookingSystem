@@ -47,8 +47,8 @@ public class TrainStation extends Application {
         while (!exit){
             Scanner sc = new Scanner(System.in);
             System.out.println("Enter option: ");
-//            String option = sc.nextLine();
-            String option = "w";
+            String option = sc.nextLine();
+//            String option = "w";
             switch (option.toLowerCase()) {
                 case "w":
                     addArrivedPassengers();
@@ -116,13 +116,17 @@ public class TrainStation extends Application {
         grid.getChildren().add(sceneHeading);
 
         Button add = new Button("Add");
-        GridPane.setConstraints(add, 5, 9);
-        add.setMinWidth(50);
+        GridPane.setHalignment(add, HPos.RIGHT);
+        GridPane.setConstraints(add, 4, 9);
+        GridPane.setColumnSpan(add, 2);
+        add.setMinWidth(60);
+        add.getStyleClass().add("add");
         grid.getChildren().add(add);
 
         Button quit = new Button("Quit");
         GridPane.setConstraints(quit, 6, 9);
         quit.setMinWidth(50);
+        quit.getStyleClass().add("quit");
         grid.getChildren().add(quit);
 
         Label grey = new Label();
@@ -171,10 +175,12 @@ public class TrainStation extends Application {
                    setSeatButtonAction(seatBtn, toBeReserved);
                 });
             } else if(seatStat[i] >= 1){
-                seatBtn.setStyle("-fx-background-color: #07b100; -fx-text-fill: #fff");
+//                seatBtn.setStyle("-fx-background-color: #07b100; -fx-text-fill: #fff");
+                    seatBtn.getStyleClass().clear();
+                    seatBtn.getStyleClass().addAll("button", "arrived");
             } else {
                 seatBtn.setDisable(true);
-                seatBtn.setStyle("-fx-background-color: #b1b1b1; -fx-text-fill: #333");
+                seatBtn.setStyle("-fx-background-color: #b1b1b1; -fx-text-fill: #333; -fx-border-color: #555");
             }
         }
         add.setOnAction(e -> {
@@ -335,12 +341,14 @@ public class TrainStation extends Application {
         }
     }
     private static void setSeatButtonAction(Button btn, List<Integer> clicked) {
-        if (!clicked.contains("" + btn.getText())) {
+        if (!clicked.contains(Integer.parseInt(btn.getText()))) {
             clicked.add(Integer.parseInt(btn.getText()));
-            btn.setStyle("-fx-background-color: #5cff9d");
+            btn.getStyleClass().clear();
+            btn.getStyleClass().addAll("button", "clicked");
         } else {
-            btn.setStyle("");
-            clicked.remove(clicked.indexOf("" + btn.getText()));
+            btn.getStyleClass().clear();
+            btn.getStyleClass().add("button");
+            clicked.remove(clicked.indexOf(Integer.parseInt(btn.getText())));
         }
     }
     private static Button makeSeatButton(int i, int c, int r) {

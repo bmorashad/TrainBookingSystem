@@ -1,0 +1,58 @@
+.root {
+	-fx-background-color: rgb(255, 255, 255);
+	-fx-font-family: 'Roboto';
+	-fx-background-insets: 5px;
+
+}
+.button {
+	-fx-background-color: #ffffff;
+	-fx-border-color: #15459c;
+	-fx-border-width: 2px;
+	-fx-font-weight: 500;
+	-fx-background-insets: 1px;
+}
+.button:hover {
+	-fx-background-color: #15459c;
+	-fx-text-fill: #ffffff;
+}
+.clicked {
+	-fx-background-color: #0052b1;
+	-fx-border-color: #0052b1;
+	-fx-text-fill: #ffffff;
+}
+.clicked:hover {
+	-fx-background-color: #0052b1;
+	-fx-text-fill: #ffffff;
+}
+.arrived {
+	-fx-background-color: #07b100;
+	-fx-border-color: #07b100;
+	-fx-text-fill: white;
+}
+.arrived:hover {
+	-fx-background-color: #07b100;
+	-fx-border-color: #07b100;
+	-fx-text-fill: white;
+}
+.add, .quit {
+	-fx-font-size: 14px;
+	-fx-font-weight: 700;
+}
+.add{
+	-fx-border-color: #0052b1;
+	-fx-background-color: #0052b1;
+	-fx-text-fill: white;
+}
+.add:hover {
+	-fx-border-color: #004ba0;
+	-fx-background-color: #004ba0;
+}
+.quit {
+	-fx-border-color: #0069e0;
+	-fx-background-color: #fff;
+	-fx-text-fill: #0069e0;
+}
+.quit:hover {
+	-fx-border-color: #004ba0;
+	-fx-background-color: #004ba0;
+}
