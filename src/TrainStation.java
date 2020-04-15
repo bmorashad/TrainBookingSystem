@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -14,6 +15,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
@@ -43,8 +47,8 @@ public class TrainStation extends Application {
         while (!exit){
             Scanner sc = new Scanner(System.in);
             System.out.println("Enter option: ");
-            String option = sc.nextLine();
-//            String option = "a";
+//            String option = sc.nextLine();
+            String option = "w";
             switch (option.toLowerCase()) {
                 case "w":
                     addArrivedPassengers();
@@ -100,19 +104,25 @@ public class TrainStation extends Application {
         grid.setVgap(10);
         grid.setHgap(10);
 
-        Label lbl = new Label("Add arrived passengers to waiting room");
-        lbl.setTextFill(Color.web("blue"));
-        lbl.setStyle("-fx-font-size: 18px");
-        GridPane.setConstraints(lbl, 0, 0);
-        GridPane.setColumnSpan(lbl,6);
-        grid.getChildren().add(lbl);
+//        grid.setGridLinesVisible(true);
+
+        Text sceneHeading = new Text("Add arrived passengers to waiting room");
+        sceneHeading.setStyle("-fx-font-family: Roboto;");
+        sceneHeading.setFill(Color.valueOf("#2e4a7d"));
+        sceneHeading.setFont(Font.font(null, FontWeight.BOLD, 20));
+        GridPane.setConstraints(sceneHeading, 0, 0);
+        GridPane.setColumnSpan(sceneHeading,7);
+        GridPane.setMargin(sceneHeading, new Insets(0, 0, 10, 0));
+        grid.getChildren().add(sceneHeading);
 
         Button add = new Button("Add");
         GridPane.setConstraints(add, 5, 9);
+        add.setMinWidth(50);
         grid.getChildren().add(add);
 
         Button quit = new Button("Quit");
         GridPane.setConstraints(quit, 6, 9);
+        quit.setMinWidth(50);
         grid.getChildren().add(quit);
 
         Label grey = new Label();
@@ -125,8 +135,9 @@ public class TrainStation extends Application {
 
         Label greyInfo = new Label("not-booked");
         GridPane.setHalignment(greyInfo, HPos.LEFT);
-        GridPane.setConstraints(greyInfo, 0, 2);
+        GridPane.setConstraints(greyInfo, 0, 1);
         GridPane.setColumnSpan(greyInfo, 2);
+        GridPane.setMargin(greyInfo, new Insets(0, 0, 0, 20));
         grid.getChildren().add(greyInfo);
 
         Label green = new Label();
@@ -134,18 +145,20 @@ public class TrainStation extends Application {
         green.setMaxSize(15, 15);
         green.setStyle("-fx-background-color: #07b100");
         GridPane.setHalignment(green, HPos.LEFT);
-//        GridPane.setColumnSpan(green, 2);
-        GridPane.setConstraints(green, 6, 1);
+        GridPane.setMargin(green, new Insets(0, 0, 0, 45));
+        GridPane.setColumnSpan(green, 2);
+        GridPane.setConstraints(green, 1, 1);
         grid.getChildren().add(green);
 
         Label greenInfo = new Label("arrived");
         GridPane.setHalignment(greenInfo, HPos.LEFT);
-        GridPane.setConstraints(greenInfo, 6, 2);
-//        GridPane.setColumnSpan(greenInfo, 2);
+        GridPane.setConstraints(greenInfo, 1, 1);
+        GridPane.setColumnSpan(greenInfo, 2);
+        GridPane.setMargin(greenInfo, new Insets(0, 0, 0, 65));
         grid.getChildren().add(greenInfo);
 
         final List<Integer> toBeReserved = new ArrayList<>();
-        for(int i = 0, c = 0, r = 2; i < BOOKED_PASSENGERS.length; i++) {
+        for(int i = 0, c = 0, r = 1; i < BOOKED_PASSENGERS.length; i++) {
             if(i % 7 == 0) {
                 r += 1;
                 c = 0;
@@ -244,13 +257,15 @@ public class TrainStation extends Application {
         if(passengersInQueue.length != 0) {
             passengers.add(passengersInQueue[passengersInQueue.length - 1]);
         }
-        if(boardFrom-1 != passengersInQueue[passengersInQueue.length - 1].getSeatNum()) {
-            int lastBoarded = passengersInQueue[passengersInQueue.length-1].getSeatNum();
-            int lastInBoardingGrp = boardFrom;
-            int difference = lastInBoardingGrp - lastBoarded;
-            for(int i = 1; i < difference; i++) {
-                if(seatStat[lastBoarded+i-1] == -1) {
-                    passengers.add(BOOKED_PASSENGERS[lastBoarded+i-1]);
+        if(passengersInQueue.length > 0) {
+            if (boardFrom - 1 != passengersInQueue[passengersInQueue.length - 1].getSeatNum()) {
+                int lastBoarded = passengersInQueue[passengersInQueue.length - 1].getSeatNum();
+                int lastInBoardingGrp = boardFrom;
+                int difference = lastInBoardingGrp - lastBoarded;
+                for (int i = 1; i < difference; i++) {
+                    if (seatStat[lastBoarded + i - 1] == -1) {
+                        passengers.add(BOOKED_PASSENGERS[lastBoarded + i - 1]);
+                    }
                 }
             }
         }
@@ -272,8 +287,12 @@ public class TrainStation extends Application {
             }
         });
 
+        Label tbPlacehoder = new Label("Train Queue Is Empty");
+        tbPlacehoder.setPadding(new Insets(100));
+        tb.setPlaceholder(tbPlacehoder);
+
         VBox vBox = new VBox();
-        vBox.getChildren().add(tb);
+        vBox.getChildren().addAll(new Label("Train Queue Yo"), tb);
 
         Scene scene = new Scene(vBox, 600, 600);
         Stage st = new Stage();
@@ -333,6 +352,7 @@ public class TrainStation extends Application {
     }
     private static <T extends Pane> void popGui(Stage stage, T pane, double width, double height) {
         Scene scene = new Scene(pane, width, height);
+        scene.getStylesheets().add("train-station.css");
         stage.setScene(scene);
         stage.showAndWait();
     }
