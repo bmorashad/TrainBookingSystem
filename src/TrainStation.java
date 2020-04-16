@@ -28,7 +28,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class TrainStation extends Application {
-    public final String STATION = "Colombo";
+    private final String STATION = "Colombo";
     private int boardFrom = -1;
     private int lastBoarded = 0;
     // 1 - arrived, -1 - not-arrived, 0 - not-booked
@@ -261,7 +261,20 @@ public class TrainStation extends Application {
         //Table Populating
         ObservableList<Passenger> passengersInQueue = getSeatsInTrainQueue();
         TableView<Passenger> trainQTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty");
-        GridPane.setConstraints(trainQTable, 0, 1);
+        GridPane.setConstraints(trainQTable, 0, 2);
+
+        Label red = new Label();
+        red.setMinSize(15, 15);
+        red.setMaxSize(15, 15);
+        red.setStyle("-fx-background-color: #ffa485");
+        GridPane.setHalignment(red, HPos.LEFT);
+        GridPane.setConstraints(red, 0, 1);
+        GridPane.setMargin(red, new Insets(0, 0, 12, 0));
+
+        Label redInfo = new Label("not-arrived");
+        GridPane.setHalignment(redInfo, HPos.LEFT);
+        GridPane.setConstraints(redInfo, 0, 1);
+        GridPane.setMargin(redInfo, new Insets(0, 0, 12,20));
 
         Pane captionQueueTable = makeTableCaption("Train Queue");
         GridPane.setConstraints(captionQueueTable, 0, 0);
@@ -279,10 +292,23 @@ public class TrainStation extends Application {
                 }
             }
         });
-
+//        trainQTable.sort();
         ObservableList<Passenger> allPassengers = getSeatsInWaitingRoom();
         TableView<Passenger> waitingRoomTable = makePassengerDetailTable(allPassengers, "No one in waiting room");
-        GridPane.setConstraints(waitingRoomTable, 1, 1);
+        GridPane.setConstraints(waitingRoomTable, 1, 2);
+
+        Label yello = new Label();
+        yello.setMinSize(15, 15);
+        yello.setMaxSize(15, 15);
+        yello.setStyle("-fx-background-color: #fff5ad");
+        GridPane.setHalignment(yello, HPos.LEFT);
+        GridPane.setConstraints(yello, 1, 1);
+        GridPane.setMargin(yello, new Insets(0, 0, 12, 0));
+
+        Label yelloInfo = new Label("late-arrival");
+        GridPane.setHalignment(yelloInfo, HPos.LEFT);
+        GridPane.setConstraints(yelloInfo, 1, 1);
+        GridPane.setMargin(yelloInfo, new Insets(0, 0, 12,20));
 
         Pane captionWRTable = makeTableCaption("Waiting Room");
         GridPane.setConstraints(captionWRTable, 1, 0);
@@ -312,9 +338,9 @@ public class TrainStation extends Application {
 //        VBox rightBox = new VBox();
 
         GridPane gp = new GridPane();
-        gp.setHgap(5);
+        gp.setHgap(20);
         GridPane.setFillHeight(trainQTable, false);
-        gp.getChildren().addAll(trainQTable, captionQueueTable, waitingRoomTable, captionWRTable);
+        gp.getChildren().addAll(trainQTable, captionQueueTable, red, redInfo, waitingRoomTable, captionWRTable, yello, yelloInfo);
         gp.setAlignment(Pos.CENTER);
 //        gp.setGridLinesVisible(true);
 //        gp.getColumnConstraints().add(new ColumnConstraints(100)); // column 0 is 100 wide
@@ -381,11 +407,11 @@ public class TrainStation extends Application {
     private Pane makeTableCaption(String caption) {
         Text title = new Text(caption);
         HBox captionBox = new HBox();
-        captionBox.setAlignment(Pos.CENTER);
-        captionBox.setStyle("-fx-background-color: #2e4a7d;");
-        title.setFill(Color.valueOf("#fff"));
+        captionBox.setAlignment(Pos.CENTER_LEFT);
+//        captionBox.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(222,222,222) 16%, rgb(232,232,232) 79%); -fx-border-width: 1px 1px 0px 1px; -fx-border-color: #c3c3c3");
+        title.setFill(Color.valueOf("#2e4a7d"));
         title.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
-        HBox.setMargin(title, new Insets(20, 0, 20, 0));
+        HBox.setMargin(title, new Insets(0, 0, 15, 0));
         captionBox.getChildren().add(title);
 
         return captionBox;
