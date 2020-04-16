@@ -1,3 +1,4 @@
+import com.sun.xml.internal.messaging.saaj.soap.GifDataContentHandler;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -11,9 +12,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -48,7 +47,7 @@ public class TrainStation extends Application {
             Scanner sc = new Scanner(System.in);
             System.out.println("Enter option: ");
             String option = sc.nextLine();
-//            String option = "w";
+//            String option = "t";
             switch (option.toLowerCase()) {
                 case "w":
                     addArrivedPassengers();
@@ -229,24 +228,22 @@ public class TrainStation extends Application {
         TableView<Passenger> tb = new TableView<>();
 
         TableColumn<Passenger, String> nameColumn = new TableColumn<>("Name");
-//        nameColumn.setMinWidth(200);
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
-//        nameColumn.setSortable(false);
 
         TableColumn<Passenger, Integer> seatColumn = new TableColumn<>("Seat");
-//        seatColumn.setMinWidth(200);
         seatColumn.setCellValueFactory(new PropertyValueFactory<>("seatNum"));
-//        seatColumn.setSortable(false);
 
         TableColumn<Passenger, String> startStationColumn = new TableColumn<>("Start");
-//        startStationColumn.setMinWidth(200);
         startStationColumn.setCellValueFactory(new PropertyValueFactory<>("startStation"));
-//        startStationColumn.setSortable(false);
+
 
         TableColumn<Passenger, String> endStationColumn = new TableColumn<>("End");
-//        endStationColumn.setMinWidth(200);
         endStationColumn.setCellValueFactory(new PropertyValueFactory<>("endStation"));
-//        endStationColumn.setSortable(false);
+
+
+        TableColumn<Passenger, String> journeyColumn = new TableColumn<>("Journey");
+        journeyColumn.getColumns().addAll(startStationColumn, endStationColumn);
+
 
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         for(int i = 0; i < passengersInQueue.length - 1; i++) {
@@ -277,7 +274,7 @@ public class TrainStation extends Application {
         }
 
         tb.setItems(passengers);
-        tb.getColumns().addAll(nameColumn, seatColumn, startStationColumn, endStationColumn);
+        tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn);
 
         tb.setRowFactory(tr -> new TableRow<Passenger>(){
             @Override
@@ -294,13 +291,40 @@ public class TrainStation extends Application {
         });
 
         Label tbPlacehoder = new Label("Train Queue Is Empty");
-        tbPlacehoder.setPadding(new Insets(100));
         tb.setPlaceholder(tbPlacehoder);
+        tb.setSelectionModel(null);
+        GridPane.setConstraints(tb, 0, 1);
+//        GridPane.setColumnSpan(tb, 2);
 
-        VBox vBox = new VBox();
-        vBox.getChildren().addAll(new Label("Train Queue Yo"), tb);
+        Text title1 = new Text("Train Queue");
+        Pane titleBox = new Pane();
+        titleBox.setStyle("-fx-background-color: #2e4a7d;");
+        GridPane.setConstraints(titleBox, 0, 0);
+//        title1.setStyle();
+        title1.setFill(Color.valueOf("#fff"));
+        title1.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
+        GridPane.setHalignment(title1, HPos.CENTER);
+        GridPane.setMargin(title1, new Insets(20, 0, 20, 0));
+        GridPane.setConstraints(title1, 0, 0);
 
-        Scene scene = new Scene(vBox, 600, 600);
+//        VBox leftBox = new VBox();
+//        leftBox.setMinWidth(tb.getWidth());
+//        leftBox.getChildren().addAll(new Label("Train Queue Yo"), tb);
+
+//        VBox rightBox = new VBox();
+
+
+        GridPane gp = new GridPane();
+//        gp.setGridLinesVisible(true);
+        GridPane.setFillHeight(tb, false);
+        gp.getChildren().addAll(tb, titleBox, title1);
+        gp.setAlignment(Pos.CENTER);
+//        gp.getColumnConstraints().add(new ColumnConstraints(100)); // column 0 is 100 wide
+
+//        BorderPane gp = new BorderPane();
+//        gp.getChildren().addAll(tb);
+
+        Scene scene = new Scene(gp, 600, 600);
         Stage st = new Stage();
         st.setScene(scene);
         st.showAndWait();
