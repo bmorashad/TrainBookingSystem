@@ -223,7 +223,8 @@ public class TrainStation extends Application {
     public void showQueue() {
     }
     public void makeTable() {
-
+        System.out.println(boardFrom);
+        System.out.println("trainQ " + trainQueue.getSize());
         // Old trainQ list
 
 //        Passenger[] passengersInQueue = trainQueue.getQueue();
@@ -292,8 +293,8 @@ public class TrainStation extends Application {
                 super.updateItem(p, empty);
                 if(p == null) {
                     setStyle("");
-                } else if (seatStat[p.getSeatNum()-1] == -1) {
-                    setStyle("-fx-background-color: #ffa485");
+                } else if (p.getSeatNum() <= boardFrom) {
+                    setStyle("-fx-background-color: #fff5ad");
                 } else {
                     setStyle("");
                 }
@@ -327,9 +328,11 @@ public class TrainStation extends Application {
     private ObservableList<Passenger> getSeatsInTrainQueue() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         int lastBoardedIndex = lastBoarded - 1;
-        for(int i = 1; i < boardFrom; i++) {
-            if(seatStat[lastBoardedIndex+i] == 1 || seatStat[lastBoardedIndex+i] == -1) {
+        for(int i = 1; i <= boardFrom; i++) {
+            if(seatStat[lastBoardedIndex+i] == 2 || seatStat[lastBoardedIndex+i] == -1) {
                 passengers.add(BOOKED_PASSENGERS[lastBoardedIndex+i]);
+            } else {
+                System.out.println("yes");
             }
         }
         return passengers;
@@ -337,11 +340,9 @@ public class TrainStation extends Application {
     private ObservableList<Passenger> getSeatsInWaitingRoom() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         if(boardFrom > -1) {
-            for(int i = 0; i < BOOKED_PASSENGERS.length; i++) {
-                if(BOOKED_PASSENGERS[i] != null) {
-                    if(seatStat[i] != 0 && seatStat[i] > -1) {
-                        passengers.add(BOOKED_PASSENGERS[i]);
-                    }
+            for(Passenger p: waitingRoom) {
+                if(p != null) {
+                    passengers.add(p);
                 }
             }
         }
@@ -467,6 +468,7 @@ public class TrainStation extends Application {
                 while (!lateComers.isEmpty() ) {
                     trainQueue.enqueue(lateComers.get(i));
                     seatStat[lateComers.get(i).getSeatNum() - 1] = 2;
+                    waitingRoom[lateComers.get(i).getSeatNum()-1] = null;
                     lateComers.remove(i);
                     totalAdded += 1;
                     if (totalAdded >= passengersToQueue) {
@@ -489,17 +491,18 @@ public class TrainStation extends Application {
 //        System.out.println(remainingToAdd);
         try {
             for (int i = 0; i < remainingToAdd; i++) {
-                System.out.println("iteration " + i);
-                System.out.println("boardFrom " + (boardFrom));
+//                System.out.println("iteration " + i);
+//                System.out.println("boardFrom " + (boardFrom));
 //                System.out.println("alreadyAdded " + alreadyAdded);
                 if (boardFrom == waitingRoom.length) {
                     System.out.println(alreadyAdded + "  passengers were added successfully");
                     break;
                 }
-                System.out.println(waitingRoom[boardFrom]);
+//                System.out.println(waitingRoom[boardFrom]);
                 if (waitingRoom[boardFrom] != null) {
                     trainQueue.enqueue(waitingRoom[boardFrom]);
-                    seatStat[waitingRoom[boardFrom].getSeatNum() - 1] = 2;
+                    System.out.println("boardFrom: " + boardFrom + " seatNum - 1: " + (waitingRoom[boardFrom].getSeatNum() - 1));
+                    seatStat[boardFrom] = 2;
                     waitingRoom[boardFrom] = null;
                     alreadyAdded += 1;
                 }
