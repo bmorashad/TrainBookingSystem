@@ -4,6 +4,7 @@
 	-fx-background-insets: 5px;
 
 }
+/* SEAT BUTTONS*/
 .button {
 	-fx-background-color: #ffffff;
 	-fx-border-color: #15459c;
@@ -12,7 +13,8 @@
 	-fx-background-insets: 1px;
 }
 .button:hover {
-	-fx-background-color: #15459c;
+	-fx-background-color: rgba(21, 69, 156, 0.75);
+	-fx-border-color: rgba(21, 69, 156, 0.75);
 	-fx-text-fill: #ffffff;
 }
 .clicked {
@@ -34,6 +36,8 @@
 	-fx-border-color: #07b100;
 	-fx-text-fill: white;
 }
+
+/* ADD & QUIT BUTTON */
 .add, .quit {
 	-fx-font-size: 14px;
 	-fx-font-weight: 700;
@@ -48,11 +52,13 @@
 	-fx-background-color: #004ba0;
 }
 .quit {
-	-fx-border-color: #0069e0;
+	-fx-border-color: #e03547;
 	-fx-background-color: #fff;
-	-fx-text-fill: #0069e0;
+	-fx-text-fill: #e03547;
 }
 .quit:hover {
-	-fx-border-color: #004ba0;
-	-fx-background-color: #004ba0;
+	-fx-border-color: #e03547;
+	-fx-background-color: #e03547;
 }
+
+/* TABLE VIEW */
