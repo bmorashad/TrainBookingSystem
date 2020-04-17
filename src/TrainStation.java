@@ -1,9 +1,4 @@
-import com.sun.xml.internal.messaging.saaj.soap.GifDataContentHandler;
 import javafx.application.Application;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -17,11 +12,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 
-import javax.swing.plaf.nimbus.State;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
@@ -225,56 +217,14 @@ public class TrainStation extends Application {
     public void makeTable() {
         System.out.println(boardFrom);
         System.out.println("trainQ " + trainQueue.getSize());
-        // Old trainQ list
-
-//        Passenger[] passengersInQueue = trainQueue.getQueue();
-//        System.out.println(Arrays.toString(passengersInQueue));
-//        bubbleSortArr(passengersInQueue);
-
-//        for(int i = 0; i < passengersInQueue.length - 1; i++) {
-//            passengers.add(passengersInQueue[i]);
-//            int currentSeat = passengersInQueue[i].getSeatNum();
-//            int nextSeat = passengersInQueue[i+1].getSeatNum();
-//            int upTo = nextSeat - currentSeat;
-//            for(int j = 1; j < upTo; j++) {
-//                if(seatStat[passengersInQueue[i].getSeatNum()+j-1] == -1) {
-//                    passengers.add(BOOKED_PASSENGERS[passengersInQueue[i].getSeatNum()+j - 1]);
-//                }
-//            }
-//        }
-//        if(passengersInQueue.length != 0) {
-//            passengers.add(passengersInQueue[passengersInQueue.length - 1]);
-//        }
-//        if(passengersInQueue.length > 0) {
-//            if (boardFrom - 1 != passengersInQueue[passengersInQueue.length - 1].getSeatNum()) {
-//                int lastBoarded = passengersInQueue[passengersInQueue.length - 1].getSeatNum();
-//                int lastInBoardingGrp = boardFrom;
-//                int difference = lastInBoardingGrp - lastBoarded;
-//                for (int i = 1; i < difference; i++) {
-//                    if (seatStat[lastBoarded + i - 1] == -1) {
-//                        passengers.add(BOOKED_PASSENGERS[lastBoarded + i - 1]);
-//                    }
-//                }
-//            }
-//        }
 
         //Table Populating
         ObservableList<Passenger> passengersInQueue = getSeatsInTrainQueue();
         TableView<Passenger> trainQTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty");
         GridPane.setConstraints(trainQTable, 0, 2);
 
-        Label red = new Label();
-        red.setMinSize(15, 15);
-        red.setMaxSize(15, 15);
-        red.setStyle("-fx-background-color: #ffa485");
-        GridPane.setHalignment(red, HPos.LEFT);
-        GridPane.setConstraints(red, 0, 1);
-        GridPane.setMargin(red, new Insets(0, 0, 3, 0));
-
-        Label redInfo = new Label("not-arrived");
-        GridPane.setHalignment(redInfo, HPos.LEFT);
+        HBox redInfo = makeTableRowColorInfo("#ffa485", "not-arrived");
         GridPane.setConstraints(redInfo, 0, 1);
-        GridPane.setMargin(redInfo, new Insets(0, 0, 3,20));
 
         Pane captionQueueTable = makeTableCaption("Train Queue");
         GridPane.setConstraints(captionQueueTable, 0, 0);
@@ -293,22 +243,12 @@ public class TrainStation extends Application {
             }
         });
 //        trainQTable.sort();
-        ObservableList<Passenger> allPassengers = getSeatsInWaitingRoom();
+        ObservableList<Passenger> allPassengers = getPassengersInWaitingRoom();
         TableView<Passenger> waitingRoomTable = makePassengerDetailTable(allPassengers, "No one in waiting room");
         GridPane.setConstraints(waitingRoomTable, 1, 2);
 
-        Label yello = new Label();
-        yello.setMinSize(15, 15);
-        yello.setMaxSize(15, 15);
-        yello.setStyle("-fx-background-color: #fff5ad");
-        GridPane.setHalignment(yello, HPos.LEFT);
-        GridPane.setConstraints(yello, 1, 1);
-        GridPane.setMargin(yello, new Insets(0, 0, 3, 0));
-
-        Label yelloInfo = new Label("late-arrival");
-        GridPane.setHalignment(yelloInfo, HPos.LEFT);
+        HBox yelloInfo = makeTableRowColorInfo("#fff5ad", "late-arrival");
         GridPane.setConstraints(yelloInfo, 1, 1);
-        GridPane.setMargin(yelloInfo, new Insets(0, 0, 3,20));
 
         Pane captionWRTable = makeTableCaption("Waiting Room");
         GridPane.setConstraints(captionWRTable, 1, 0);
@@ -327,18 +267,15 @@ public class TrainStation extends Application {
             }
         });
 
-//        GridPane.setColumnSpan(tb, 2);
+        ObservableList<Passenger> boarded = getSeatsInTrainQueue();
+        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty");
+        GridPane.setConstraints(boardePassengersTable, 2, 2);
 
-
-//        title1.setStyle();
-//        VBox leftBox = new VBox();
-//        leftBox.setMinWidth(tb.getWidth());
-//        leftBox.getChildren().addAll(new Label("Train Queue Yo"), tb);
-
-//        VBox rightBox = new VBox();
+        Pane captionBoardedTable = makeTableCaption("Boarded Passengers");
+        GridPane.setConstraints(captionBoardedTable, 2, 0);
 
         Button quit = new Button("Quit");
-        GridPane.setConstraints(quit, 1, 4);
+        GridPane.setConstraints(quit, 2, 4);
         GridPane.setHalignment(quit, HPos.RIGHT);
         quit.setMinWidth(70);
         quit.getStyleClass().add("quit");
@@ -347,20 +284,17 @@ public class TrainStation extends Application {
         gp.setHgap(20);
         gp.setVgap(10);
         GridPane.setFillHeight(trainQTable, false);
-        gp.getChildren().addAll(quit, trainQTable, captionQueueTable, red, redInfo, waitingRoomTable, captionWRTable, yello, yelloInfo);
+        gp.getChildren().addAll(quit, trainQTable, captionQueueTable, redInfo, waitingRoomTable, captionWRTable, yelloInfo, boardePassengersTable, captionBoardedTable);
         gp.setAlignment(Pos.CENTER);
 //        gp.setGridLinesVisible(true);
 //        gp.getColumnConstraints().add(new ColumnConstraints(100)); // column 0 is 100 wide
 
-//        BorderPane gp = new BorderPane();
-//        gp.getChildren().addAll(tb);
         Stage st = new Stage();
         st.setTitle("Visualize train queue and waiting room");
-        popGui(st, gp, 600, 600);
-
         quit.setOnAction(event -> {
             st.close();
         });
+        popGui(st, gp, 1200, 600);
     }
     private ObservableList<Passenger> getSeatsInTrainQueue() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
@@ -374,13 +308,22 @@ public class TrainStation extends Application {
         }
         return passengers;
     }
-    private ObservableList<Passenger> getSeatsInWaitingRoom() {
+    private ObservableList<Passenger> getPassengersInWaitingRoom() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         if(boardFrom > -1) {
             for(Passenger p: waitingRoom) {
                 if(p != null) {
                     passengers.add(p);
                 }
+            }
+        }
+        return passengers;
+    }
+    private ObservableList<Passenger> getBoardedPassengers() {
+        ObservableList<Passenger> passengers = FXCollections.observableArrayList();
+        for(int i=0; i<seatStat.length; i++) {
+            if(seatStat[i] == 3) {
+                passengers.add(BOOKED_PASSENGERS[i]);
             }
         }
         return passengers;
@@ -426,6 +369,24 @@ public class TrainStation extends Application {
         captionBox.getChildren().add(title);
 
         return captionBox;
+    }
+    private HBox makeTableRowColorInfo(String colorCode, String info) {
+        Label color = new Label();
+        color.setMinSize(15, 15);
+        color.setMaxSize(15, 15);
+        color.setStyle("-fx-background-color: " + colorCode);
+        GridPane.setHalignment(color, HPos.LEFT);
+        HBox.setMargin(color, new Insets(0, 0, 3, 0));
+//        GridPane.setConstraints(yello, 1, 1);
+
+        Label infoLabel = new Label(info);
+        GridPane.setHalignment(infoLabel, HPos.LEFT);
+        HBox.setMargin(infoLabel, new Insets(0, 0, 3,6));
+//        GridPane.setConstraints(yelloInfo, 1, 1);
+
+        HBox colorAndInfo = new HBox();
+        colorAndInfo.getChildren().addAll(color, infoLabel);
+        return colorAndInfo;
     }
 
     //helper methods
