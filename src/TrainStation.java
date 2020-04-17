@@ -362,7 +362,6 @@ public class TrainStation extends Application {
         for(Passenger p : passengersInQueue) {
             passengers.add(p);
         }
-        int between = boardFrom - lastBoarded;
         for(int i = lastBoarded; i < boardFrom; i++) {
             if(seatStat[i] == -1) {
                 passengers.add(BOOKED_PASSENGERS[i]);
@@ -370,6 +369,7 @@ public class TrainStation extends Application {
                 System.out.println("yes");
             }
         }
+        bubbleSortArr(passengers);
         return passengers;
     }
     private ObservableList<Passenger> getPassengersInWaitingRoom() {
@@ -596,6 +596,24 @@ public class TrainStation extends Application {
                     T temp = arr[currentNum];
                     arr[currentNum] = arr[nextNum];
                     arr[nextNum] = temp;
+                    isSwapped = true;
+                }
+            }
+            inOrder += 1;
+            isNoSorted = isSwapped;
+        }
+        return arr;
+    }
+    public <T extends Comparable<T>> List<T> bubbleSortArr(List<T> arr) {
+        boolean isNoSorted = true;
+        int inOrder = 0;
+        while (isNoSorted) {
+            boolean isSwapped = false;
+            for(int i = 0; i < arr.size()-inOrder-1; i++) {
+                Integer currentNum = i;
+                Integer nextNum = i+1;
+                if(arr.get(currentNum).compareTo(arr.get(nextNum)) > 0) {
+                    Collections.swap(arr, currentNum, nextNum);
                     isSwapped = true;
                 }
             }
