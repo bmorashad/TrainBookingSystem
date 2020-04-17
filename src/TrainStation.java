@@ -212,6 +212,26 @@ public class TrainStation extends Application {
 //        System.out.println(totalAdded);
     }
 
+    public void deletePassengerFromQueue() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter name of the passenger: ");
+        String name = sc.nextLine();
+        System.out.println("Enter seat number of the passenger: ");
+        int seatNum = sc.nextInt();
+        Passenger deletedPassenger = trainQueue.delete(name, seatNum);
+        if(deletedPassenger != null) {
+            seatStat[deletedPassenger.getSeatNum()-1] = -1;
+            deletedPassenger.display();
+        } else {
+            System.out.println("No such passengers there!");
+        }
+    }
+
+    public void runSimulation() {
+
+    }
+
+
     public void showQueue() {
     }
     public void makeTable() {
