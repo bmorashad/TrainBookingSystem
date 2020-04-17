@@ -215,7 +215,7 @@ public class TrainStation extends Application {
         } else {
             System.out.println("There are no passengers in the waiting room to add");
         }
-//        System.out.println(totalAdded);
+        System.out.println(boardFrom);
     }
 
     public void deletePassengerFromQueue() {
@@ -249,7 +249,7 @@ public class TrainStation extends Application {
                 boardedPassenger.display();
             }
             trainQueue.setMaxStayInQueue(secondsInQueue);
-            lastBoarded = boardFrom-1;
+            lastBoarded = boardFrom;
             System.out.println(lastBoarded);
             double avgSecondsInQueue = secondsInQueue / queueLen;
             System.out.println("----------------------Summary------------------------");
@@ -273,7 +273,8 @@ public class TrainStation extends Application {
     public void showQueue() {
     }
     public void makeTable() {
-        System.out.println(boardFrom);
+        System.out.println("boardFrom " + boardFrom);
+        System.out.println("lastBoarded " + lastBoarded);
         System.out.println("trainQ " + trainQueue.getSize());
 
         //Table Populating
@@ -325,8 +326,8 @@ public class TrainStation extends Application {
             }
         });
 
-        ObservableList<Passenger> boarded = getSeatsInTrainQueue();
-        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty");
+        ObservableList<Passenger> boarded = getBoardedPassengers();
+        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(boarded, "Train Queue Is Empty");
         GridPane.setConstraints(boardePassengersTable, 2, 2);
 
         Pane captionBoardedTable = makeTableCaption("Boarded Passengers");
@@ -356,10 +357,15 @@ public class TrainStation extends Application {
     }
     private ObservableList<Passenger> getSeatsInTrainQueue() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
-        int lastBoardedIndex = lastBoarded - 1;
-        for(int i = 1; i <= boardFrom; i++) {
-            if(seatStat[lastBoardedIndex+i] == 2 || seatStat[lastBoardedIndex+i] == -1) {
-                passengers.add(BOOKED_PASSENGERS[lastBoardedIndex+i]);
+        Passenger[] passengersInQueue = trainQueue.getQueue();
+//        int lastBoardedIndex = lastBoarded - 1;
+        for(Passenger p : passengersInQueue) {
+            passengers.add(p);
+        }
+        int between = boardFrom - lastBoarded;
+        for(int i = lastBoarded; i < boardFrom; i++) {
+            if(seatStat[i] == -1) {
+                passengers.add(BOOKED_PASSENGERS[i]);
             } else {
                 System.out.println("yes");
             }
