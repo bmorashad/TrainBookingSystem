@@ -53,6 +53,12 @@ public class TrainStation extends Application {
                 case "t":
                     makeTable();
                     break;
+                case "d":
+                    deletePassengerFromQueue();
+                    break;
+                case "r":
+                    runSimulation();
+                    break;
                 case "q":
                     exit = true;
             }
@@ -228,9 +234,40 @@ public class TrainStation extends Application {
     }
 
     public void runSimulation() {
-
+        if(trainQueue.getSize() > 0) {
+            Passenger boardedPassenger = null;
+            trainQueue.bubbleSortQueue();
+            int queueLen = trainQueue.getSize();
+            int secondsInQueue = getSecondsInQueue();
+            int minSecondsInQueue = secondsInQueue;
+            for (int i = 0; i < trainQueue.getSize(); i++) {
+                boardedPassenger = trainQueue.dequeue();
+                BOOKED_PASSENGERS[boardedPassenger.getSeatNum() - 1].setSecondsInQueue(secondsInQueue);
+                seatStat[boardedPassenger.getSeatNum() - 1] = 3;
+                secondsInQueue = getSecondsInQueue();
+                secondsInQueue += secondsInQueue;
+                boardedPassenger.display();
+            }
+            trainQueue.setMaxStayInQueue(secondsInQueue);
+            lastBoarded = boardedPassenger.getSeatNum();
+            double avgSecondsInQueue = secondsInQueue / queueLen;
+            System.out.println("----------------------Summary------------------------");
+            System.out.println("Queue Length: " + queueLen);
+            System.out.println("Min Stay: " + minSecondsInQueue);
+            System.out.println("Max Stay: " + trainQueue.getMaxStayInQueue());
+            System.out.println("Average Stay: " + avgSecondsInQueue);
+        } else {
+            System.out.println("No one in the queue!");
+        }
     }
-
+    private int getSecondsInQueue() {
+        Random r = new Random();
+        int s1 = r.nextInt(6) + 1;
+        int s2 = r.nextInt(6) + 1;
+        int s3 = r.nextInt(6) + 1;
+        int totalSeconds = s1 + s2 + s3;
+        return totalSeconds;
+    }
 
     public void showQueue() {
     }
