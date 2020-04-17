@@ -269,12 +269,12 @@ public class TrainStation extends Application {
         red.setStyle("-fx-background-color: #ffa485");
         GridPane.setHalignment(red, HPos.LEFT);
         GridPane.setConstraints(red, 0, 1);
-        GridPane.setMargin(red, new Insets(0, 0, 12, 0));
+        GridPane.setMargin(red, new Insets(0, 0, 3, 0));
 
         Label redInfo = new Label("not-arrived");
         GridPane.setHalignment(redInfo, HPos.LEFT);
         GridPane.setConstraints(redInfo, 0, 1);
-        GridPane.setMargin(redInfo, new Insets(0, 0, 12,20));
+        GridPane.setMargin(redInfo, new Insets(0, 0, 3,20));
 
         Pane captionQueueTable = makeTableCaption("Train Queue");
         GridPane.setConstraints(captionQueueTable, 0, 0);
@@ -303,12 +303,12 @@ public class TrainStation extends Application {
         yello.setStyle("-fx-background-color: #fff5ad");
         GridPane.setHalignment(yello, HPos.LEFT);
         GridPane.setConstraints(yello, 1, 1);
-        GridPane.setMargin(yello, new Insets(0, 0, 12, 0));
+        GridPane.setMargin(yello, new Insets(0, 0, 3, 0));
 
         Label yelloInfo = new Label("late-arrival");
         GridPane.setHalignment(yelloInfo, HPos.LEFT);
         GridPane.setConstraints(yelloInfo, 1, 1);
-        GridPane.setMargin(yelloInfo, new Insets(0, 0, 12,20));
+        GridPane.setMargin(yelloInfo, new Insets(0, 0, 3,20));
 
         Pane captionWRTable = makeTableCaption("Waiting Room");
         GridPane.setConstraints(captionWRTable, 1, 0);
@@ -320,7 +320,7 @@ public class TrainStation extends Application {
                 if(p == null) {
                     setStyle("");
                 } else if (p.getSeatNum() <= boardFrom) {
-                    setStyle("-fx-background-color: #fff5ad");
+                    setStyle("-fx-background-color: #fff5ad;");
                 } else {
                     setStyle("");
                 }
@@ -337,10 +337,17 @@ public class TrainStation extends Application {
 
 //        VBox rightBox = new VBox();
 
+        Button quit = new Button("Quit");
+        GridPane.setConstraints(quit, 1, 4);
+        GridPane.setHalignment(quit, HPos.RIGHT);
+        quit.setMinWidth(70);
+        quit.getStyleClass().add("quit");
+
         GridPane gp = new GridPane();
         gp.setHgap(20);
+        gp.setVgap(10);
         GridPane.setFillHeight(trainQTable, false);
-        gp.getChildren().addAll(trainQTable, captionQueueTable, red, redInfo, waitingRoomTable, captionWRTable, yello, yelloInfo);
+        gp.getChildren().addAll(quit, trainQTable, captionQueueTable, red, redInfo, waitingRoomTable, captionWRTable, yello, yelloInfo);
         gp.setAlignment(Pos.CENTER);
 //        gp.setGridLinesVisible(true);
 //        gp.getColumnConstraints().add(new ColumnConstraints(100)); // column 0 is 100 wide
@@ -350,6 +357,10 @@ public class TrainStation extends Application {
         Stage st = new Stage();
         st.setTitle("Visualize train queue and waiting room");
         popGui(st, gp, 600, 600);
+
+        quit.setOnAction(event -> {
+            st.close();
+        });
     }
     private ObservableList<Passenger> getSeatsInTrainQueue() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
@@ -400,7 +411,7 @@ public class TrainStation extends Application {
 
         Label lblPH = new Label(placeHolder);
         tb.setPlaceholder(lblPH);
-        tb.setSelectionModel(null);
+//        tb.setSelectionModel(null);//throws error when sorting
 
         return tb;
     }
@@ -411,7 +422,7 @@ public class TrainStation extends Application {
 //        captionBox.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(222,222,222) 16%, rgb(232,232,232) 79%); -fx-border-width: 1px 1px 0px 1px; -fx-border-color: #c3c3c3");
         title.setFill(Color.valueOf("#2e4a7d"));
         title.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
-        HBox.setMargin(title, new Insets(0, 0, 15, 0));
+        HBox.setMargin(title, new Insets(0, 0, 5, 0));
         captionBox.getChildren().add(title);
 
         return captionBox;
