@@ -234,13 +234,13 @@ public class TrainStation extends Application {
     }
 
     public void runSimulation() {
-        if(trainQueue.getSize() > 0) {
+        int queueLen = trainQueue.getSize();
+        if(queueLen > 0) {
             Passenger boardedPassenger = null;
             trainQueue.bubbleSortQueue();
-            int queueLen = trainQueue.getSize();
             int secondsInQueue = getSecondsInQueue();
             int minSecondsInQueue = secondsInQueue;
-            for (int i = 0; i < trainQueue.getSize(); i++) {
+            for (int i = 0; i < queueLen; i++) {
                 boardedPassenger = trainQueue.dequeue();
                 BOOKED_PASSENGERS[boardedPassenger.getSeatNum() - 1].setSecondsInQueue(secondsInQueue);
                 seatStat[boardedPassenger.getSeatNum() - 1] = 3;
@@ -249,7 +249,8 @@ public class TrainStation extends Application {
                 boardedPassenger.display();
             }
             trainQueue.setMaxStayInQueue(secondsInQueue);
-            lastBoarded = boardedPassenger.getSeatNum();
+            lastBoarded = boardFrom-1;
+            System.out.println(lastBoarded);
             double avgSecondsInQueue = secondsInQueue / queueLen;
             System.out.println("----------------------Summary------------------------");
             System.out.println("Queue Length: " + queueLen);
