@@ -1,3 +1,4 @@
+import com.sun.xml.internal.fastinfoset.tools.XML_SAX_StAX_FI;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -234,9 +235,10 @@ public class TrainStation extends Application {
     }
 
     public void runSimulation() {
+        ObservableList<Passenger> boardedPassengers = FXCollections.observableArrayList();
         int queueLen = trainQueue.getSize();
         if(queueLen > 0) {
-            Passenger boardedPassenger = null;
+            Passenger boardedPassenger;
             trainQueue.bubbleSortQueue();
             int secondsInQueue = getSecondsInQueue();
             int minSecondsInQueue = secondsInQueue;
@@ -244,19 +246,21 @@ public class TrainStation extends Application {
                 boardedPassenger = trainQueue.dequeue();
                 BOOKED_PASSENGERS[boardedPassenger.getSeatNum() - 1].setSecondsInQueue(secondsInQueue);
                 seatStat[boardedPassenger.getSeatNum() - 1] = 3;
-                secondsInQueue = getSecondsInQueue();
-                secondsInQueue += secondsInQueue;
+                secondsInQueue += getSecondsInQueue();
                 boardedPassenger.display();
+                boardedPassengers.add(boardedPassenger);
             }
             trainQueue.setMaxStayInQueue(secondsInQueue);
             lastBoarded = boardFrom;
             System.out.println(lastBoarded);
-            double avgSecondsInQueue = secondsInQueue / queueLen;
+            float avgSecondsInQueue = secondsInQueue / (float) queueLen;
+            float[] data = {queueLen, minSecondsInQueue, secondsInQueue, avgSecondsInQueue};
             System.out.println("----------------------Summary------------------------");
             System.out.println("Queue Length: " + queueLen);
             System.out.println("Min Stay: " + minSecondsInQueue);
             System.out.println("Max Stay: " + trainQueue.getMaxStayInQueue());
             System.out.println("Average Stay: " + avgSecondsInQueue);
+            makeSimulationDetGUI(boardedPassengers, data);
         } else {
             System.out.println("No one in the queue!");
         }
@@ -268,6 +272,78 @@ public class TrainStation extends Application {
         int s3 = r.nextInt(6) + 1;
         int totalSeconds = s1 + s2 + s3;
         return totalSeconds;
+    }
+    private void makeSimulationDetGUI(ObservableList<Passenger> passengers, float[] data) {
+        TableView<Passenger> boardedPassengersTable = makePassengerDetailTable(passengers, "No one boarded");
+
+        TableColumn<Passenger, Integer> secondsInQueueCol = new TableColumn<>("Delay");
+        secondsInQueueCol.setCellValueFactory(new PropertyValueFactory<>("secondsInQueue"));
+        GridPane.setConstraints(boardedPassengersTable, 0, 1);
+
+        Pane captionBoardedTable = makeTableCaption("Boarded Passengers(from recent queue)");
+        GridPane.setConstraints(captionBoardedTable, 0, 0);
+
+        Text summaryTitle = new Text("Queue Summary");
+        GridPane.setConstraints(summaryTitle, 0, 0);
+        GridPane.setMargin(summaryTitle, new Insets(25, 0, 25, 20));
+        summaryTitle.setFill(Color.valueOf("#333"));
+        summaryTitle.setUnderline(true);
+        summaryTitle.setFont(Font.font("Roboto", FontWeight.BOLD, 18));
+
+
+        Text queueLen = makeSimulationSumDescription("Queue Len: ",(int) data[0]);
+        Text minSec = makeSimulationSumDescription("Min Seconds in Queue: ",(int) data[1]);
+        Text maxSec = makeSimulationSumDescription("Max Seconds in Queue: ",(int) data[2]);
+        Text avgStay = makeSimulationSumDescription("Average Stay: ", data[3]);
+
+        GridPane.setConstraints(queueLen,0, 1);
+        GridPane.setConstraints(minSec,0, 2);
+        GridPane.setConstraints(maxSec,0, 4);
+        GridPane.setConstraints(avgStay,0, 5);
+
+        GridPane sumBox = new GridPane();
+        sumBox.setStyle("-fx-background-color: #fff");
+        sumBox.setAlignment(Pos.CENTER);
+        GridPane.setConstraints(sumBox, 1, 1);
+        sumBox.getChildren().addAll(summaryTitle, queueLen, minSec, maxSec, avgStay);
+
+
+        Button quit = new Button("Quit");
+        GridPane.setConstraints(quit, 1, 3);
+        GridPane.setHalignment(quit, HPos.RIGHT);
+        quit.setMinWidth(70);
+        quit.getStyleClass().add("quit");
+
+        GridPane gp = new GridPane();
+        gp.setHgap(20);
+        gp.setVgap(10);
+//        for(int i = 1; i < 4; i++) {
+//            gp.getRowConstraints().add(new RowConstraints(100));
+//        }
+        GridPane.setFillHeight(boardedPassengersTable, false);
+        gp.getChildren().addAll(quit, boardedPassengersTable, captionBoardedTable, sumBox);
+        gp.setAlignment(Pos.CENTER);
+
+        Stage st = new Stage();
+        st.setTitle("Simulation report");
+        quit.setOnAction(event -> {
+            st.close();
+        });
+        popGui(st, gp, 1200, 600);
+    }
+    private Text makeSimulationSumDescription(String des, Number data) {
+        Text description;
+        if(data instanceof Float) {
+            description = new Text(des + String.format("%.2f", data));
+        } else {
+            description = new Text(des + data);
+        }
+        GridPane.setMargin(description, new Insets(0, 0, 15, 20));
+        description.setStyle("-fx-text-fill: #2c7d39");
+        description.setFill(Color.valueOf("#2c7d39"));
+        description.setFont(Font.font("Roboto", FontWeight.BOLD, 16));
+
+        return description;
     }
 
     public void showQueue() {
@@ -423,13 +499,13 @@ public class TrainStation extends Application {
         return tb;
     }
     private Pane makeTableCaption(String caption) {
-        Text title = new Text(caption);
         HBox captionBox = new HBox();
         captionBox.setAlignment(Pos.CENTER_LEFT);
+        Text title = new Text(caption);
+        HBox.setMargin(title, new Insets(0, 0, 5, 0));
 //        captionBox.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(222,222,222) 16%, rgb(232,232,232) 79%); -fx-border-width: 1px 1px 0px 1px; -fx-border-color: #c3c3c3");
         title.setFill(Color.valueOf("#2e4a7d"));
         title.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
-        HBox.setMargin(title, new Insets(0, 0, 5, 0));
         captionBox.getChildren().add(title);
 
         return captionBox;

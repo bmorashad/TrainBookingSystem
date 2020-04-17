@@ -44,15 +44,17 @@ public class PassengerQueue {
     public Passenger delete(String fullName, int seatNum) {
         Passenger dltPassenger = null;
         bubbleSortQueue();
-        int indexOfSeatNum = findSeat(seatNum);
-        if(indexOfSeatNum >= 0) {
-            if(queue[indexOfSeatNum].getFullName() == fullName) {
-                dltPassenger = queue[indexOfSeatNum];
-                for(int j = 0; j < size; j++) {
-                    queue[(j+indexOfSeatNum)%maxSize] = queue[(j+indexOfSeatNum+1)%maxSize];
+        if(!isEmpty()) {
+            int indexOfSeatNum = findSeat(seatNum);
+            if (indexOfSeatNum >= 0) {
+                if (queue[indexOfSeatNum].getFullName() == fullName) {
+                    dltPassenger = queue[indexOfSeatNum];
+                    for (int j = 0; j < size; j++) {
+                        queue[(j + indexOfSeatNum) % maxSize] = queue[(j + indexOfSeatNum + 1) % maxSize];
+                    }
+                    tail--;
+                    size--;
                 }
-                tail--;
-                size--;
             }
         }
         return dltPassenger;
@@ -147,7 +149,7 @@ public class PassengerQueue {
         } while ((from - to) != 1 && (to - from) != maxSize-1);
         return -1;
     }
-    private  void bubbleSortQueue() {
+    public  void bubbleSortQueue() {
         boolean isNoSorted = true;
         int inOrder = 0;
         while (isNoSorted) {

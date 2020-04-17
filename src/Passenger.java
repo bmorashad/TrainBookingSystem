@@ -1,14 +1,14 @@
 public class Passenger implements Comparable<Passenger>{
-    private static int maxSecondsInQueue;
+//    private static int maxSecondsInQueue;
     private String fullName;
     private int seatNum;
     private String startStation;
     private String endStation;
     private int secondsInQueue;
 
-    public static void setMaxSecondsInQueue(int maxSecondsInQueue) {
-        Passenger.maxSecondsInQueue = maxSecondsInQueue;
-    }
+//    public static void setMaxSecondsInQueue(int maxSecondsInQueue) {
+//        Passenger.maxSecondsInQueue = maxSecondsInQueue;
+//    }
 
     public void setStartStation(String startStation) {
         this.startStation = startStation;
@@ -43,9 +43,9 @@ public class Passenger implements Comparable<Passenger>{
         return secondsInQueue;
     }
 
-    public int getMaxSecondsInQueue() {
-        return maxSecondsInQueue;
-    }
+//    public int getMaxSecondsInQueue() {
+//        return maxSecondsInQueue;
+//    }
 
     public void setFullName(String fullName) {
        this.fullName = fullName;
@@ -57,20 +57,20 @@ public class Passenger implements Comparable<Passenger>{
 
     public void setSecondsInQueue(int sec) {
         secondsInQueue = sec;
-        if(maxSecondsInQueue < secondsInQueue) {
-            maxSecondsInQueue = secondsInQueue;
-        }
+//        if(maxSecondsInQueue < secondsInQueue) {
+//            maxSecondsInQueue = secondsInQueue;
+//        }
     }
 
     public void updateSecondsInQueue(int sec) {
         secondsInQueue += sec;
-        if(maxSecondsInQueue < secondsInQueue) {
-            maxSecondsInQueue = secondsInQueue;
-        }
+//        if(maxSecondsInQueue < secondsInQueue) {
+//            maxSecondsInQueue = secondsInQueue;
+//        }
     }
 
     public void display() {
-
+        System.out.println(fullName + "\t" + seatNum + "\t" + startStation + ", " + endStation);
     }
 
     @Override
