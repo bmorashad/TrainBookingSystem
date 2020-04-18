@@ -244,19 +244,37 @@ public class TrainStation extends Application{
 
     public void saveToFile() {
         File file = new File("train-station-recent-stat.txt");
-        FileWriter fw = null;
-        String seatStat = Arrays.toString(this.seatStat);
-        String save = seatStat.substring(1, seatStat.length() - 1);
-        System.out.println(save);
-        try {
-            fw = new FileWriter(file);
-            fw.write(lastBoarded);
-            fw.write(seatStat);
-            fw.write(boardFrom);
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        FileWriter fw;
+        if(boardFrom >= 0) {
+            try {
+                fw = new FileWriter(file);
+                fw.write(lastBoarded + "\n");
+                List<Integer> secondsInQueueList = new ArrayList<>();
+                fw.write(this.seatStat[0] + "");
+                for (int i = 1; i < this.seatStat.length; i++) {
+                    fw.write("," + seatStat[i]);
+                    if (this.seatStat[i] == 3) {
+                        int secondsInQueue = BOOKED_PASSENGERS[i].getSecondsInQueue();
+                        secondsInQueueList.add(secondsInQueue);
+                    }
+                }
+                fw.write("\n" + boardFrom + "\n");
+                for (int i = 0; i < secondsInQueueList.size() - 1; i++) {
+                    fw.write(secondsInQueueList.get(i) + ",");
+                }
+                fw.write(secondsInQueueList.get(secondsInQueueList.size() - 1) + "");
+
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else{
+            System.out.println("No data to save!");
         }
+    }
+
+    public void loadFromFile() {
+
     }
 
     public void runSimulation() {
