@@ -6,6 +6,10 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
@@ -15,12 +19,11 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
 
-public class TrainStation extends Application {
+public class TrainStation extends Application{
     private final String STATION = "Colombo";
     private int boardFrom = -1;
     private int lastBoarded = 0;
@@ -59,6 +62,9 @@ public class TrainStation extends Application {
                     break;
                 case "r":
                     runSimulation();
+                    break;
+                case "s":
+                    saveToFile();
                     break;
                 case "q":
                     exit = true;
@@ -201,22 +207,24 @@ public class TrainStation extends Application {
         int passengersToQueue = rd.nextInt(6) + 1;
         System.out.println(passengersToQueue + " Passengers can be added");
         boolean isConfirmed = confirm("Are you sure you want to add " + passengersToQueue + " passengers to queue");
-        int totalAdded = 0;
-        if(boardFrom != -1 || !lateComers.isEmpty()) {
-            totalAdded = addLateComersToQueue(passengersToQueue);
+        if(isConfirmed) {
+            int totalAdded = 0;
+            if (boardFrom != -1 || !lateComers.isEmpty()) {
+                totalAdded = addLateComersToQueue(passengersToQueue);
 //            int currentlyAdded = totalAdded;
-            if (totalAdded < passengersToQueue && boardFrom < waitingRoom.length) {
-                totalAdded = addToQueueFromWaitingRoom(totalAdded, passengersToQueue);
+                if (totalAdded < passengersToQueue && boardFrom < waitingRoom.length) {
+                    totalAdded = addToQueueFromWaitingRoom(totalAdded, passengersToQueue);
+                }
+                if (totalAdded == 0 && !trainQueue.isFull()) {
+                    System.out.println("No passengers were added");
+                }
+            } else if (boardFrom == waitingRoom.length - 1) {
+                System.out.println("There are no passengers left to add");
+            } else {
+                System.out.println("There are no passengers in the waiting room to add");
             }
-            if(totalAdded == 0 && !trainQueue.isFull()) {
-                System.out.println("No passengers were added");
-            }
-        } else if(boardFrom == waitingRoom.length-1){
-            System.out.println("There are no passengers left to add");
-        } else {
-            System.out.println("There are no passengers in the waiting room to add");
+            System.out.println(boardFrom);
         }
-        System.out.println(boardFrom);
     }
 
     public void deletePassengerFromQueue() {
@@ -231,6 +239,23 @@ public class TrainStation extends Application {
             deletedPassenger.display();
         } else {
             System.out.println("No such passengers there!");
+        }
+    }
+
+    public void saveToFile() {
+        File file = new File("train-station-recent-stat.txt");
+        FileWriter fw = null;
+        String seatStat = Arrays.toString(this.seatStat);
+        String save = seatStat.substring(1, seatStat.length() - 1);
+        System.out.println(save);
+        try {
+            fw = new FileWriter(file);
+            fw.write(lastBoarded);
+            fw.write(seatStat);
+            fw.write(boardFrom);
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -274,10 +299,7 @@ public class TrainStation extends Application {
         return totalSeconds;
     }
     private void makeSimulationDetGUI(ObservableList<Passenger> passengers, float[] data) {
-        TableView<Passenger> boardedPassengersTable = makePassengerDetailTable(passengers, "No one boarded");
-
-        TableColumn<Passenger, Integer> secondsInQueueCol = new TableColumn<>("Delay");
-        secondsInQueueCol.setCellValueFactory(new PropertyValueFactory<>("secondsInQueue"));
+        TableView<Passenger> boardedPassengersTable = makePassengerDetailTable(passengers, "No one boarded", true);
         GridPane.setConstraints(boardedPassengersTable, 0, 1);
 
         Pane captionBoardedTable = makeTableCaption("Boarded Passengers(from recent queue)");
@@ -307,9 +329,13 @@ public class TrainStation extends Application {
         GridPane.setConstraints(sumBox, 1, 1);
         sumBox.getChildren().addAll(summaryTitle, queueLen, minSec, maxSec, avgStay);
 
+        BarChart<String, Number> bc = makeBarChart(passengers);
+        GridPane.setConstraints(bc, 2, 1);
+        GridPane.setMargin(bc, new Insets(0, 0, 0, 20));
+
 
         Button quit = new Button("Quit");
-        GridPane.setConstraints(quit, 1, 3);
+        GridPane.setConstraints(quit, 2, 3);
         GridPane.setHalignment(quit, HPos.RIGHT);
         quit.setMinWidth(70);
         quit.getStyleClass().add("quit");
@@ -321,7 +347,7 @@ public class TrainStation extends Application {
 //            gp.getRowConstraints().add(new RowConstraints(100));
 //        }
         GridPane.setFillHeight(boardedPassengersTable, false);
-        gp.getChildren().addAll(quit, boardedPassengersTable, captionBoardedTable, sumBox);
+        gp.getChildren().addAll(quit, boardedPassengersTable, captionBoardedTable, sumBox, bc);
         gp.setAlignment(Pos.CENTER);
 
         Stage st = new Stage();
@@ -345,6 +371,28 @@ public class TrainStation extends Application {
 
         return description;
     }
+    private BarChart<String, Number> makeBarChart(ObservableList<Passenger> passengers) {
+        final CategoryAxis xAxis = new CategoryAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        final BarChart<String, Number> bc = new BarChart<>(xAxis, yAxis);
+        bc.setTitle("Simulation Summary");
+//        bc.setCategoryGap(20);
+//        bc.setBarGap(20);
+
+        yAxis.setAnimated(true);
+        xAxis.setLabel("Passenger");
+        yAxis.setLabel("seconds in queue");
+
+        XYChart.Series series = new XYChart.Series();
+        series.getData().add(new XYChart.Data(passengers.get(0).getFullName() + " - " + passengers.get(0).getSeatNum(), passengers.get(0).getSecondsInQueue()));
+        for(int i = 1; i < passengers.size(); i++) {
+            series.getData().add(new XYChart.Data(passengers.get(i).getFullName() + " - " + passengers.get(i).getSeatNum(), passengers.get(i).getSecondsInQueue() - passengers.get(i-1).getSecondsInQueue()));
+        }
+        bc.getData().addAll(series);
+        return bc;
+    }
+
+
 
     public void showQueue() {
     }
@@ -355,7 +403,7 @@ public class TrainStation extends Application {
 
         //Table Populating
         ObservableList<Passenger> passengersInQueue = getSeatsInTrainQueue();
-        TableView<Passenger> trainQTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty");
+        TableView<Passenger> trainQTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty", false);
         GridPane.setConstraints(trainQTable, 0, 2);
 
         HBox redInfo = makeTableRowColorInfo("#ffa485", "not-arrived");
@@ -379,7 +427,7 @@ public class TrainStation extends Application {
         });
 //        trainQTable.sort();
         ObservableList<Passenger> allPassengers = getPassengersInWaitingRoom();
-        TableView<Passenger> waitingRoomTable = makePassengerDetailTable(allPassengers, "No one in waiting room");
+        TableView<Passenger> waitingRoomTable = makePassengerDetailTable(allPassengers, "No one in waiting room", false);
         GridPane.setConstraints(waitingRoomTable, 1, 2);
 
         HBox yelloInfo = makeTableRowColorInfo("#fff5ad", "late-arrival");
@@ -403,7 +451,7 @@ public class TrainStation extends Application {
         });
 
         ObservableList<Passenger> boarded = getBoardedPassengers();
-        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(boarded, "Train Queue Is Empty");
+        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(boarded, "Train Queue Is Empty", true);
         GridPane.setConstraints(boardePassengersTable, 2, 2);
 
         Pane captionBoardedTable = makeTableCaption("Boarded Passengers");
@@ -468,7 +516,7 @@ public class TrainStation extends Application {
         }
         return passengers;
     }
-    private TableView<Passenger> makePassengerDetailTable(ObservableList<Passenger> passengers, String placeHolder) {
+    private TableView<Passenger> makePassengerDetailTable(ObservableList<Passenger> passengers, String placeHolder, boolean boarded) {
         //Table Populating
         TableView<Passenger> tb = new TableView<>();
 
@@ -489,14 +537,22 @@ public class TrainStation extends Application {
         TableColumn<Passenger, String> journeyColumn = new TableColumn<>("Journey");
         journeyColumn.getColumns().addAll(startStationColumn, endStationColumn);
 
-        tb.setItems(passengers);
-        tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn);
+        TableColumn<Passenger, Integer> secondsInQueueColumn = new TableColumn<>("Sec in queue");
+        secondsInQueueColumn.setCellValueFactory(new PropertyValueFactory<>("secondsInQueue"));
 
+        tb.setItems(passengers);
         Label lblPH = new Label(placeHolder);
         tb.setPlaceholder(lblPH);
+
+        if(boarded) {
+            tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn, secondsInQueueColumn);
+            return tb;
+        }
+        tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn);
+        return tb;
+
 //        tb.setSelectionModel(null);//throws error when sorting
 
-        return tb;
     }
     private Pane makeTableCaption(String caption) {
         HBox captionBox = new HBox();

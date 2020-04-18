@@ -70,7 +70,11 @@ public class Passenger implements Comparable<Passenger>{
     }
 
     public void display() {
-        System.out.println(fullName + "\t" + seatNum + "\t" + startStation + ", " + endStation);
+        if(secondsInQueue > 0) {
+            System.out.println(fullName + "\t" + seatNum + "\t" + startStation + ", " + endStation + "\t" + secondsInQueue + "S");
+        } else {
+            System.out.println(fullName + "\t" + seatNum + "\t" + startStation + ", " + endStation);
+        }
     }
 
     @Override
