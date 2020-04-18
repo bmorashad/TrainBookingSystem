@@ -28,7 +28,7 @@ public class TrainStation extends Application{
     private int boardFrom = -1;
     private int lastBoarded = 0;
     // 1 - arrived, -1 - not-arrived, 0 - not-booked
-    private final int[] seatStat = new int[42];
+    private int[] seatStat = new int[42];
     public final Passenger[] BOOKED_PASSENGERS = getBookedPassengers("../CWTEST@latest/data/cTob_booking_detail.txt", LocalDate.parse("2020-04-17"));
 
     private PassengerQueue trainQueue = new PassengerQueue(21);
@@ -65,6 +65,9 @@ public class TrainStation extends Application{
                     break;
                 case "s":
                     saveToFile();
+                    break;
+                case "l":
+                    loadFromFile();
                     break;
                 case "q":
                     exit = true;
@@ -250,19 +253,17 @@ public class TrainStation extends Application{
                 fw = new FileWriter(file);
                 fw.write(lastBoarded + "\n");
                 List<Integer> secondsInQueueList = new ArrayList<>();
-                fw.write(this.seatStat[0] + "");
-                for (int i = 1; i < this.seatStat.length; i++) {
-                    fw.write("," + seatStat[i]);
+                for (int i = 0; i < this.seatStat.length; i++) {
+                    fw.write(seatStat[i] + ",");
                     if (this.seatStat[i] == 3) {
                         int secondsInQueue = BOOKED_PASSENGERS[i].getSecondsInQueue();
                         secondsInQueueList.add(secondsInQueue);
                     }
                 }
                 fw.write("\n" + boardFrom + "\n");
-                for (int i = 0; i < secondsInQueueList.size() - 1; i++) {
+                for (int i = 0; i < secondsInQueueList.size(); i++) {
                     fw.write(secondsInQueueList.get(i) + ",");
                 }
-                fw.write(secondsInQueueList.get(secondsInQueueList.size() - 1) + "");
 
                 fw.close();
             } catch (IOException e) {
@@ -274,7 +275,86 @@ public class TrainStation extends Application{
     }
 
     public void loadFromFile() {
+        File file = new File("train-station-recent-stat.txt");
+        Scanner sc;
+        int[] seatStat;
+        int[] boardedSeconds = null;
+        int[] boardedSeatNumArr = null;
+        int boardFrom;
+        String seatStatString;
+        int lastBoarded;
+        String boardedSecondsString;
+        try {
+            sc = new Scanner(file);
+            lastBoarded = Integer.parseInt(sc.nextLine());
+            seatStatString = sc.nextLine();
+            seatStat = getIntArrFromFile(seatStatString);
+            boardFrom = Integer.parseInt(sc.nextLine());
+            if(sc.hasNext()) {
+                boardedSecondsString = sc.nextLine();
+                boardedSeconds = getIntArrFromFile(boardedSecondsString);
+                boardedSeatNumArr =new int[boardedSeconds.length];
+            }
+            boolean isValidStates = true;
+            for(int i = 0, j = 0; i < seatStat.length; i++) {
+                int stat = seatStat[i];
+                System.out.println("i " + i);
+                if(this.seatStat[i] != 0 && stat == 0 || this.seatStat[i] == 0 && stat != 0){
+                    System.out.println(Arrays.toString(seatStat));
+                    System.out.println(Arrays.toString(this.seatStat));
+                    System.out.println("Aborting! Mismatch with currently booked passengers detected...");
+                    isValidStates = false;
+                    break;
+                }
+                if(stat == 3) {
+                    boardedSeatNumArr[j] = i+1;
+                    j++;
+                }
+                else if(stat == 2) {
+                    trainQueue.enqueue(BOOKED_PASSENGERS[i]);
+                } else if(stat == 1) {
+                    waitingRoom[i] = BOOKED_PASSENGERS[i];
+                }
+            }
+            if(isValidStates) {
+                this.seatStat = seatStat;
+                this.boardFrom = boardFrom;
+                this.lastBoarded =lastBoarded;
+                setBoardedPassengersSecondsInQueue(boardedSeatNumArr, boardedSeconds);
+            }
 
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    private int[] getIntArrFromFile(String fileIntList) {
+        List<Integer> intList = new ArrayList<>();
+        int preSepI = -1;
+        int sepI = fileIntList.indexOf(",");
+        int i = 0;
+        while(sepI != -1) {
+            System.out.println("i " + i);
+            int num = Integer.parseInt(fileIntList.substring(preSepI + 1, sepI));
+            intList.add(num);
+            preSepI = sepI;
+            System.out.println("sepIB " + sepI);
+            sepI = fileIntList.indexOf(",", sepI + 1);
+            System.out.println("sepIA " + sepI);
+            i++;
+        }
+        int[] intArr = new int[intList.size()];
+        for(int j = 0; j < intList.size(); j++)  {
+            intArr[j] = intList.get(j);
+        }
+        return intArr;
+    }
+    private void setBoardedPassengersSecondsInQueue(int[] seatArr, int[] seconds) {
+        for(int i = 0; i < seatArr.length; i++) {
+            BOOKED_PASSENGERS[seatArr[i]-1].setSecondsInQueue(seconds[i]);
+        }
     }
 
     public void runSimulation() {
