@@ -18,8 +18,17 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
+import org.xml.sax.*;
+import org.w3c.dom.*;
+
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class TrainStation extends Application{
@@ -228,9 +237,9 @@ public class TrainStation extends Application{
         }
     }
 
-    public void view() {
-        visualize();
-    }
+//    public void view() {
+//        visualize();
+//    }
 
     public void deletePassengerFromQueue() {
         Scanner sc = new Scanner(System.in);
@@ -248,10 +257,10 @@ public class TrainStation extends Application{
     }
 
     public void saveToFile() {
-        File file = new File("train-station-recent-stat.txt");
+        File file = new File("data/session-log/train-station-recent-sesstion.txt");
         FileWriter fw;
         if(boardFrom >= 0) {
-            boolean isConfirmed = confirm("Are you sure, this will over-write most recent saved states?(y/n)");
+            boolean isConfirmed = confirm("Are you sure, this will over-write most recent saved session?(y/n)");
             if(isConfirmed) {
                 try {
                     fw = new FileWriter(file);
@@ -279,7 +288,7 @@ public class TrainStation extends Application{
     }
 
     public void loadFromFile() {
-        File file = new File("train-station-recent-stat.txt");
+        File file = new File("data/session-log/train-station-recent-sesstion.txt");
         Scanner sc;
         int[] seatStat;
         int[] boardedSeconds = null;
@@ -364,7 +373,9 @@ public class TrainStation extends Application{
             System.out.println("Min Stay: " + minSecondsInQueue);
             System.out.println("Max Stay: " + trainQueue.getMaxStayInQueue());
             System.out.println("Average Stay: " + avgSecondsInQueue);
+            writeReportToFile("data/simulation-detail/", boardedPassengers, data);
             makeSimulationDetGUI(boardedPassengers, data);
+
         } else {
             System.out.println("No one in the queue!");
         }
@@ -484,8 +495,10 @@ public class TrainStation extends Application{
         return intArr;
     }
     private void setBoardedPassengersSecondsInQueue(int[] seatArr, int[] seconds) {
-        for(int i = 0; i < seatArr.length; i++) {
-            BOOKED_PASSENGERS[seatArr[i]-1].setSecondsInQueue(seconds[i]);
+        if(seatArr != null) {
+            for (int i = 0; i < seatArr.length; i++) {
+                BOOKED_PASSENGERS[seatArr[i] - 1].setSecondsInQueue(seconds[i]);
+            }
         }
     }
     private void makeSimulationDetGUI(ObservableList<Passenger> passengers, float[] data) {
@@ -571,9 +584,10 @@ public class TrainStation extends Application{
 
         yAxis.setAnimated(true);
         xAxis.setLabel("Passenger");
-        yAxis.setLabel("seconds in queue");
+        yAxis.setLabel("seconds");
 
         XYChart.Series series = new XYChart.Series();
+        series.setName("Time in seconds taken by a passenger in his turn");
         series.getData().add(new XYChart.Data(passengers.get(0).getFullName() + " - " + passengers.get(0).getSeatNum(), passengers.get(0).getSecondsInQueue()));
         for(int i = 1; i < passengers.size(); i++) {
             series.getData().add(new XYChart.Data(passengers.get(i).getFullName() + " - " + passengers.get(i).getSeatNum(), passengers.get(i).getSecondsInQueue() - passengers.get(i-1).getSecondsInQueue()));
@@ -581,7 +595,94 @@ public class TrainStation extends Application{
         bc.getData().addAll(series);
         return bc;
     }
+    private void writeReportToFile(String path, ObservableList<Passenger> boardedPassengers, float[] details) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        path += "simulation-report from " + dtf.format(now) + ".xml";
 
+        Document dom;
+        Element e = null;
+
+        // instance of a DocumentBuilderFactory
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        try {
+            // use factory to get an instance of document builder
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            // create instance of DOM
+            dom = db.newDocument();
+
+            Element root = dom.createElement("queue_simualtion");
+
+            //SummaryTag
+            Element summaryRootElement = dom.createElement("summary");
+
+            e = dom.createElement("queue_length");
+            e.appendChild(dom.createTextNode(Integer.toString((int) details[0])));
+            summaryRootElement.appendChild(e);
+
+            e = dom.createElement("minimum_seconds");
+            e.appendChild(dom.createTextNode(Integer.toString((int) details[1])));
+            summaryRootElement.appendChild(e);
+
+            e = dom.createElement("maximum_seconds");
+            e.appendChild(dom.createTextNode(Integer.toString((int) details[2])));
+            summaryRootElement.appendChild(e);
+
+            e = dom.createElement("average_seconds");
+            e.appendChild(dom.createTextNode(Integer.toString((int) details[3])));
+            summaryRootElement.appendChild(e);
+
+
+            Element passengersRootElement = dom.createElement("passengers");
+            for(Passenger p : boardedPassengers) {
+                Element passenger = dom.createElement("passenger");
+
+                Element name = dom.createElement("name");
+                name.appendChild(dom.createTextNode(p.getFullName()));
+
+                Element seat = dom.createElement("seat");
+                seat.appendChild(dom.createTextNode(Integer.toString(p.getSeatNum())));
+
+                Element startStation = dom.createElement("start_station");
+                startStation.appendChild(dom.createTextNode((p.getStartStation())));
+
+                Element endStation = dom.createElement("end_station");
+                endStation.appendChild(dom.createTextNode((p.getEndStation())));
+
+                Element secondsInQueue = dom.createElement("second");
+                secondsInQueue.appendChild(dom.createTextNode(Integer.toString(p.getSecondsInQueue())));
+
+                passenger.appendChild(name);passenger.appendChild(seat);passenger.appendChild(startStation);passenger.appendChild(endStation);
+                passenger.appendChild(secondsInQueue);
+
+                passengersRootElement.appendChild(passenger);
+            }
+            dom.appendChild(root);
+            root.appendChild(passengersRootElement); root.appendChild(summaryRootElement);
+            try {
+                Transformer tr = TransformerFactory.newInstance().newTransformer();
+                tr.setOutputProperty(OutputKeys.INDENT, "yes");
+                tr.setOutputProperty(OutputKeys.METHOD, "xml");
+                tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+//                tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "roles.dtd");
+                tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+                // send DOM to file
+                tr.transform(new DOMSource(dom),
+                        new StreamResult(new FileOutputStream(path)));
+
+            } catch (TransformerException te) {
+                te.printStackTrace();
+                System.out.println(te.getMessage());
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                System.out.println(ioe.getMessage());
+            }
+        } catch (ParserConfigurationException pce) {
+            pce.printStackTrace();
+            System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
+        }
+    }
 
 
 
