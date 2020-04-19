@@ -1,4 +1,3 @@
-import com.sun.xml.internal.fastinfoset.tools.XML_SAX_StAX_FI;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,7 +28,7 @@ public class TrainStation extends Application{
     private int lastBoarded = 0;
     // 1 - arrived, -1 - not-arrived, 0 - not-booked
     private int[] seatStat = new int[42];
-    public final Passenger[] BOOKED_PASSENGERS = getBookedPassengers("../CWTEST@latest/data/cTob_booking_detail.txt", LocalDate.parse("2020-04-17"));
+    public Passenger[] BOOKED_PASSENGERS = new Passenger[42];
 
     private PassengerQueue trainQueue = new PassengerQueue(21);
     private Passenger[] waitingRoom = new Passenger[42];
@@ -41,6 +40,8 @@ public class TrainStation extends Application{
 
     @Override
     public void start(Stage primaryStage) {
+        LocalDate date = LocalDate.parse("2020-04-17");
+        BOOKED_PASSENGERS = getBookedPassengers("../CWTEST@latest/data/cTob_booking_detail.txt", date);
         boolean exit = false;
         while (!exit){
             Scanner sc = new Scanner(System.in);
@@ -54,8 +55,8 @@ public class TrainStation extends Application{
                 case "a":
                     addToTrainQueue();
                     break;
-                case "t":
-                    makeTable();
+                case "v":
+                    visualize();
                     break;
                 case "d":
                     deletePassengerFromQueue();
@@ -205,11 +206,11 @@ public class TrainStation extends Application{
     }
 
     public void addToTrainQueue() {
-        System.out.println("boardFrom " + boardFrom);
+//        System.out.println("boardFrom " + boardFrom);
         Random rd = new Random();
         int passengersToQueue = rd.nextInt(6) + 1;
         System.out.println(passengersToQueue + " Passengers can be added");
-        boolean isConfirmed = confirm("Are you sure you want to add " + passengersToQueue + " passengers to queue");
+        boolean isConfirmed = confirm("Are you sure you want to add " + passengersToQueue + " passengers to queue(y/n)");
         if(isConfirmed) {
             int totalAdded = 0;
             if (boardFrom != -1 || !lateComers.isEmpty()) {
@@ -226,8 +227,13 @@ public class TrainStation extends Application{
             } else {
                 System.out.println("There are no passengers in the waiting room to add");
             }
-            System.out.println(boardFrom);
+            visualize();
+//            System.out.println(boardFrom);
         }
+    }
+
+    public void view() {
+        visualize();
     }
 
     public void deletePassengerFromQueue() {
@@ -249,25 +255,27 @@ public class TrainStation extends Application{
         File file = new File("train-station-recent-stat.txt");
         FileWriter fw;
         if(boardFrom >= 0) {
-            try {
-                fw = new FileWriter(file);
-                fw.write(lastBoarded + "\n");
-                List<Integer> secondsInQueueList = new ArrayList<>();
-                for (int i = 0; i < this.seatStat.length; i++) {
-                    fw.write(seatStat[i] + ",");
-                    if (this.seatStat[i] == 3) {
-                        int secondsInQueue = BOOKED_PASSENGERS[i].getSecondsInQueue();
-                        secondsInQueueList.add(secondsInQueue);
+            boolean isConfirmed = confirm("Are you sure, this will over-write most recent saved states?(y/n)");
+            if(isConfirmed) {
+                try {
+                    fw = new FileWriter(file);
+                    fw.write(lastBoarded + "\n");
+                    List<Integer> secondsInQueueList = new ArrayList<>();
+                    for (int i = 0; i < this.seatStat.length; i++) {
+                        fw.write(seatStat[i] + ",");
+                        if (this.seatStat[i] == 3) {
+                            int secondsInQueue = BOOKED_PASSENGERS[i].getSecondsInQueue();
+                            secondsInQueueList.add(secondsInQueue);
+                        }
                     }
+                    fw.write("\n" + boardFrom + "\n");
+                    for (int i = 0; i < secondsInQueueList.size(); i++) {
+                        fw.write(secondsInQueueList.get(i) + ",");
+                    }
+                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                fw.write("\n" + boardFrom + "\n");
-                for (int i = 0; i < secondsInQueueList.size(); i++) {
-                    fw.write(secondsInQueueList.get(i) + ",");
-                }
-
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         } else{
             System.out.println("No data to save!");
@@ -315,6 +323,9 @@ public class TrainStation extends Application{
                 } else if(stat == 1) {
                     waitingRoom[i] = BOOKED_PASSENGERS[i];
                 }
+                if(i+1 <= boardFrom) {
+                    lateComers.add(BOOKED_PASSENGERS[i]);
+                }
             }
             if(isValidStates) {
                 this.seatStat = seatStat;
@@ -329,32 +340,6 @@ public class TrainStation extends Application{
             e.printStackTrace();
         }
 
-    }
-    private int[] getIntArrFromFile(String fileIntList) {
-        List<Integer> intList = new ArrayList<>();
-        int preSepI = -1;
-        int sepI = fileIntList.indexOf(",");
-        int i = 0;
-        while(sepI != -1) {
-            System.out.println("i " + i);
-            int num = Integer.parseInt(fileIntList.substring(preSepI + 1, sepI));
-            intList.add(num);
-            preSepI = sepI;
-            System.out.println("sepIB " + sepI);
-            sepI = fileIntList.indexOf(",", sepI + 1);
-            System.out.println("sepIA " + sepI);
-            i++;
-        }
-        int[] intArr = new int[intList.size()];
-        for(int j = 0; j < intList.size(); j++)  {
-            intArr[j] = intList.get(j);
-        }
-        return intArr;
-    }
-    private void setBoardedPassengersSecondsInQueue(int[] seatArr, int[] seconds) {
-        for(int i = 0; i < seatArr.length; i++) {
-            BOOKED_PASSENGERS[seatArr[i]-1].setSecondsInQueue(seconds[i]);
-        }
     }
 
     public void runSimulation() {
@@ -388,6 +373,91 @@ public class TrainStation extends Application{
             System.out.println("No one in the queue!");
         }
     }
+
+    public void visualize() {
+        System.out.println("boardFrom " + boardFrom);
+        System.out.println("lastBoarded " + lastBoarded);
+        System.out.println("trainQ " + trainQueue.getSize());
+
+        //Table Populating
+        ObservableList<Passenger> passengersInQueue = getSeatsInTrainQueue();
+        TableView<Passenger> trainQTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty", false);
+        GridPane.setConstraints(trainQTable, 0, 2);
+
+        HBox redInfo = makeTableRowColorInfo("#ffa485", "not-arrived");
+        GridPane.setConstraints(redInfo, 0, 1);
+
+        Pane captionQueueTable = makeTableCaption("Train Queue");
+        GridPane.setConstraints(captionQueueTable, 0, 0);
+
+        trainQTable.setRowFactory(tr -> new TableRow<Passenger>(){
+            @Override
+            public void updateItem(Passenger p, boolean empty) {
+                super.updateItem(p, empty);
+                if(p == null) {
+                    setStyle("");
+                } else if(seatStat[p.getSeatNum()-1] == -1) {
+                    setStyle("-fx-background-color: #ffa485");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
+//        trainQTable.sort();
+        ObservableList<Passenger> allPassengers = getPassengersInWaitingRoom();
+        TableView<Passenger> waitingRoomTable = makePassengerDetailTable(allPassengers, "No one in waiting room", false);
+        GridPane.setConstraints(waitingRoomTable, 1, 2);
+
+        HBox yelloInfo = makeTableRowColorInfo("#fff5ad", "late-arrival");
+        GridPane.setConstraints(yelloInfo, 1, 1);
+
+        Pane captionWRTable = makeTableCaption("Waiting Room");
+        GridPane.setConstraints(captionWRTable, 1, 0);
+
+        waitingRoomTable.setRowFactory(tr -> new TableRow<Passenger>(){
+            @Override
+            public void updateItem(Passenger p, boolean empty) {
+                super.updateItem(p, empty);
+                if(p == null) {
+                    setStyle("");
+                } else if (p.getSeatNum() <= boardFrom) {
+                    setStyle("-fx-background-color: #fff5ad;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
+
+        ObservableList<Passenger> boarded = getBoardedPassengers();
+        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(boarded, "Train Queue Is Empty", true);
+        GridPane.setConstraints(boardePassengersTable, 2, 2);
+
+        Pane captionBoardedTable = makeTableCaption("Boarded Passengers");
+        GridPane.setConstraints(captionBoardedTable, 2, 0);
+
+        Button quit = new Button("Quit");
+        GridPane.setConstraints(quit, 2, 4);
+        GridPane.setHalignment(quit, HPos.RIGHT);
+        quit.setMinWidth(70);
+        quit.getStyleClass().add("quit");
+
+        GridPane gp = new GridPane();
+        gp.setHgap(20);
+        gp.setVgap(10);
+        GridPane.setFillHeight(trainQTable, false);
+        gp.getChildren().addAll(quit, trainQTable, captionQueueTable, redInfo, waitingRoomTable, captionWRTable, yelloInfo, boardePassengersTable, captionBoardedTable);
+        gp.setAlignment(Pos.CENTER);
+//        gp.setGridLinesVisible(true);
+//        gp.getColumnConstraints().add(new ColumnConstraints(100)); // column 0 is 100 wide
+
+        Stage st = new Stage();
+        st.setTitle("Visualize train queue and waiting room");
+        quit.setOnAction(event -> {
+            st.close();
+        });
+        popGui(st, gp, 1200, 600);
+    }
+
     private int getSecondsInQueue() {
         Random r = new Random();
         int s1 = r.nextInt(6) + 1;
@@ -395,6 +465,32 @@ public class TrainStation extends Application{
         int s3 = r.nextInt(6) + 1;
         int totalSeconds = s1 + s2 + s3;
         return totalSeconds;
+    }
+    private int[] getIntArrFromFile(String fileIntList) {
+        List<Integer> intList = new ArrayList<>();
+        int preSepI = -1;
+        int sepI = fileIntList.indexOf(",");
+        int i = 0;
+        while(sepI != -1) {
+            System.out.println("i " + i);
+            int num = Integer.parseInt(fileIntList.substring(preSepI + 1, sepI));
+            intList.add(num);
+            preSepI = sepI;
+            System.out.println("sepIB " + sepI);
+            sepI = fileIntList.indexOf(",", sepI + 1);
+            System.out.println("sepIA " + sepI);
+            i++;
+        }
+        int[] intArr = new int[intList.size()];
+        for(int j = 0; j < intList.size(); j++)  {
+            intArr[j] = intList.get(j);
+        }
+        return intArr;
+    }
+    private void setBoardedPassengersSecondsInQueue(int[] seatArr, int[] seconds) {
+        for(int i = 0; i < seatArr.length; i++) {
+            BOOKED_PASSENGERS[seatArr[i]-1].setSecondsInQueue(seconds[i]);
+        }
     }
     private void makeSimulationDetGUI(ObservableList<Passenger> passengers, float[] data) {
         TableView<Passenger> boardedPassengersTable = makePassengerDetailTable(passengers, "No one boarded", true);
@@ -492,91 +588,8 @@ public class TrainStation extends Application{
 
 
 
-    public void showQueue() {
-    }
-    public void makeTable() {
-        System.out.println("boardFrom " + boardFrom);
-        System.out.println("lastBoarded " + lastBoarded);
-        System.out.println("trainQ " + trainQueue.getSize());
 
-        //Table Populating
-        ObservableList<Passenger> passengersInQueue = getSeatsInTrainQueue();
-        TableView<Passenger> trainQTable = makePassengerDetailTable(passengersInQueue, "Train Queue Is Empty", false);
-        GridPane.setConstraints(trainQTable, 0, 2);
 
-        HBox redInfo = makeTableRowColorInfo("#ffa485", "not-arrived");
-        GridPane.setConstraints(redInfo, 0, 1);
-
-        Pane captionQueueTable = makeTableCaption("Train Queue");
-        GridPane.setConstraints(captionQueueTable, 0, 0);
-
-        trainQTable.setRowFactory(tr -> new TableRow<Passenger>(){
-            @Override
-            public void updateItem(Passenger p, boolean empty) {
-                super.updateItem(p, empty);
-                if(p == null) {
-                    setStyle("");
-                } else if(seatStat[p.getSeatNum()-1] == -1) {
-                    setStyle("-fx-background-color: #ffa485");
-                } else {
-                    setStyle("");
-                }
-            }
-        });
-//        trainQTable.sort();
-        ObservableList<Passenger> allPassengers = getPassengersInWaitingRoom();
-        TableView<Passenger> waitingRoomTable = makePassengerDetailTable(allPassengers, "No one in waiting room", false);
-        GridPane.setConstraints(waitingRoomTable, 1, 2);
-
-        HBox yelloInfo = makeTableRowColorInfo("#fff5ad", "late-arrival");
-        GridPane.setConstraints(yelloInfo, 1, 1);
-
-        Pane captionWRTable = makeTableCaption("Waiting Room");
-        GridPane.setConstraints(captionWRTable, 1, 0);
-
-        waitingRoomTable.setRowFactory(tr -> new TableRow<Passenger>(){
-            @Override
-            public void updateItem(Passenger p, boolean empty) {
-                super.updateItem(p, empty);
-                if(p == null) {
-                    setStyle("");
-                } else if (p.getSeatNum() <= boardFrom) {
-                    setStyle("-fx-background-color: #fff5ad;");
-                } else {
-                    setStyle("");
-                }
-            }
-        });
-
-        ObservableList<Passenger> boarded = getBoardedPassengers();
-        TableView<Passenger> boardePassengersTable = makePassengerDetailTable(boarded, "Train Queue Is Empty", true);
-        GridPane.setConstraints(boardePassengersTable, 2, 2);
-
-        Pane captionBoardedTable = makeTableCaption("Boarded Passengers");
-        GridPane.setConstraints(captionBoardedTable, 2, 0);
-
-        Button quit = new Button("Quit");
-        GridPane.setConstraints(quit, 2, 4);
-        GridPane.setHalignment(quit, HPos.RIGHT);
-        quit.setMinWidth(70);
-        quit.getStyleClass().add("quit");
-
-        GridPane gp = new GridPane();
-        gp.setHgap(20);
-        gp.setVgap(10);
-        GridPane.setFillHeight(trainQTable, false);
-        gp.getChildren().addAll(quit, trainQTable, captionQueueTable, redInfo, waitingRoomTable, captionWRTable, yelloInfo, boardePassengersTable, captionBoardedTable);
-        gp.setAlignment(Pos.CENTER);
-//        gp.setGridLinesVisible(true);
-//        gp.getColumnConstraints().add(new ColumnConstraints(100)); // column 0 is 100 wide
-
-        Stage st = new Stage();
-        st.setTitle("Visualize train queue and waiting room");
-        quit.setOnAction(event -> {
-            st.close();
-        });
-        popGui(st, gp, 1200, 600);
-    }
     private ObservableList<Passenger> getSeatsInTrainQueue() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         Passenger[] passengersInQueue = trainQueue.getQueue();
@@ -691,6 +704,7 @@ public class TrainStation extends Application{
         if(isConfirmed.equalsIgnoreCase("y") || isConfirmed.equalsIgnoreCase("yes")) {
             return true;
         }
+        System.out.println("Abored!");
         return false;
 
     }
