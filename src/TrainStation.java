@@ -33,15 +33,16 @@ import java.util.*;
 
 public class TrainStation extends Application{
     private final String STATION = "Colombo";
-    private int boardFrom = -1;
-    private int lastBoarded = 0;
-    // 1 - arrived, -1 - not-arrived, 0 - not-booked, 2 - in-trainQ, 3 - boarded
-    private int[] seatStat = new int[42];
     private final Passenger[] BOOKED_PASSENGERS = new Passenger[42];
 
-    private PassengerQueue trainQueue = new PassengerQueue(21);
+    // 1 - arrived, -1 - not-arrived, 0 - not-booked, 2 - in-trainQ, 3 - boarded
+    private int[] seatStat = new int[42];
+    private int boardFrom = -1;
+    private int lastBoarded = 0;
+
     private Passenger[] waitingRoom = new Passenger[42];
     private List<Passenger> lateComers = new ArrayList<>();
+    private PassengerQueue trainQueue = new PassengerQueue(21);
 
     public static void main(String[] args) {
         launch(args);
@@ -237,10 +238,6 @@ public class TrainStation extends Application{
         }
     }
 
-//    public void view() {
-//        visualize();
-//    }
-
     public void deletePassengerFromQueue() {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter name of the passenger: ");
@@ -336,31 +333,6 @@ public class TrainStation extends Application{
         }
 
     }
-    private boolean validateLoadedSeatStat(int[] seatStat, List<Passenger> lateComers, int[] boardedSeatNumArr, Passenger[] waitingRoom, PassengerQueue trainQueue) throws Exception {
-        boolean isValid = true;
-        for(int i = 0, j = 0; i < seatStat.length; i++) {
-            int stat = seatStat[i];
-            System.out.println("i " + i);
-            if(this.seatStat[i] != 0 && stat == 0 || this.seatStat[i] == 0 && stat != 0){
-                System.out.println("Aborting! Mismatch with currently booked passengers detected...");
-                isValid= false;
-                break;
-            }
-            if(stat == 3) {
-                boardedSeatNumArr[j] = i+1;
-                j++;
-            }
-            else if(stat == 2) {
-                trainQueue.enqueue(BOOKED_PASSENGERS[i]);
-            } else if(stat == 1) {
-                waitingRoom[i] = BOOKED_PASSENGERS[i];
-            }
-            if(i+1 <= boardFrom) {
-                lateComers.add(BOOKED_PASSENGERS[i]);
-            }
-        }
-        return isValid;
-    }
 
     public void runSimulation() {
         ObservableList<Passenger> boardedPassengers = FXCollections.observableArrayList();
@@ -368,13 +340,13 @@ public class TrainStation extends Application{
         if(queueLen > 0) {
             Passenger boardedPassenger;
             trainQueue.bubbleSortQueue();
-            int secondsInQueue = getSecondsInQueue();
+            int secondsInQueue = generateSecondsInQueue();
             int minSecondsInQueue = secondsInQueue;
             for (int i = 0; i < queueLen; i++) {
                 boardedPassenger = trainQueue.dequeue();
                 BOOKED_PASSENGERS[boardedPassenger.getSeatNum() - 1].setSecondsInQueue(secondsInQueue);
                 seatStat[boardedPassenger.getSeatNum() - 1] = 3;
-                secondsInQueue += getSecondsInQueue();
+                secondsInQueue += generateSecondsInQueue();
                 boardedPassenger.display();
                 boardedPassengers.add(boardedPassenger);
             }
@@ -397,9 +369,6 @@ public class TrainStation extends Application{
     }
 
     public void visualize() {
-        System.out.println("boardFrom " + boardFrom);
-        System.out.println("lastBoarded " + lastBoarded);
-        System.out.println("trainQ " + trainQueue.getSize());
 
         //Table Populating
         ObservableList<Passenger> passengersInQueue = getSeatsInTrainQueue();
@@ -480,14 +449,39 @@ public class TrainStation extends Application{
         popGui(st, gp, 1200, 600);
     }
 
-    private int getSecondsInQueue() {
-        Random r = new Random();
-        int s1 = r.nextInt(6) + 1;
-        int s2 = r.nextInt(6) + 1;
-        int s3 = r.nextInt(6) + 1;
-        int totalSeconds = s1 + s2 + s3;
-        return totalSeconds;
+
+
+    //HELPER METHODS
+
+    // LOAD
+
+    // Validate The Provided Data Matches With Booked Passengers(invalid if a booked passenger is saved as not booked or vice versa)
+    private boolean validateLoadedSeatStat(int[] seatStat, List<Passenger> lateComers, int[] boardedSeatNumArr, Passenger[] waitingRoom, PassengerQueue trainQueue) throws Exception {
+        boolean isValid = true;
+        for(int i = 0, j = 0; i < seatStat.length; i++) {
+            int stat = seatStat[i];
+            System.out.println("i " + i);
+            if(this.seatStat[i] != 0 && stat == 0 || this.seatStat[i] == 0 && stat != 0){
+                System.out.println("Aborting! Mismatch with currently booked passengers detected...");
+                isValid= false;
+                break;
+            }
+            if(stat == 3) {
+                boardedSeatNumArr[j] = i+1;
+                j++;
+            }
+            else if(stat == 2) {
+                trainQueue.enqueue(BOOKED_PASSENGERS[i]);
+            } else if(stat == 1) {
+                waitingRoom[i] = BOOKED_PASSENGERS[i];
+            }
+            if(i+1 <= boardFrom) {
+                lateComers.add(BOOKED_PASSENGERS[i]);
+            }
+        }
+        return isValid;
     }
+
     private int[] getIntArrFromFile(String fileIntList) {
         List<Integer> intList = new ArrayList<>();
         int preSepI = -1;
@@ -516,6 +510,20 @@ public class TrainStation extends Application{
             }
         }
     }
+
+    //RUN
+
+    // Boarding Passengers
+    private int generateSecondsInQueue() {
+        Random r = new Random();
+        int s1 = r.nextInt(6) + 1;
+        int s2 = r.nextInt(6) + 1;
+        int s3 = r.nextInt(6) + 1;
+        int totalSeconds = s1 + s2 + s3;
+        return totalSeconds;
+    }
+
+    // GUI
     private void makeSimulationDetGUI(ObservableList<Passenger> passengers, float[] data) {
         TableView<Passenger> boardedPassengersTable = makePassengerDetailTable(passengers, "No one boarded", true);
         GridPane.setConstraints(boardedPassengersTable, 0, 1);
@@ -610,68 +618,24 @@ public class TrainStation extends Application{
         bc.getData().addAll(series);
         return bc;
     }
+
+    // Report
     private void writeReportToFile(String path, ObservableList<Passenger> boardedPassengers, float[] details) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         path += "simulation-report from " + dtf.format(now) + ".xml";
 
         Document dom;
-        Element e = null;
-
-        // instance of a DocumentBuilderFactory
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try {
-            // use factory to get an instance of document builder
             DocumentBuilder db = dbf.newDocumentBuilder();
-            // create instance of DOM
-            dom = db.newDocument();
 
+            dom = db.newDocument();
             Element root = dom.createElement("queue_simualtion");
 
-            //SummaryTag
-            Element summaryRootElement = dom.createElement("summary");
+            Element summaryRootElement = makeSummaryElements(details);
+            Element passengersRootElement = makePassengerElements(boardedPassengers);
 
-            e = dom.createElement("queue_length");
-            e.appendChild(dom.createTextNode(Integer.toString((int) details[0])));
-            summaryRootElement.appendChild(e);
-
-            e = dom.createElement("minimum_seconds");
-            e.appendChild(dom.createTextNode(Integer.toString((int) details[1])));
-            summaryRootElement.appendChild(e);
-
-            e = dom.createElement("maximum_seconds");
-            e.appendChild(dom.createTextNode(Integer.toString((int) details[2])));
-            summaryRootElement.appendChild(e);
-
-            e = dom.createElement("average_seconds");
-            e.appendChild(dom.createTextNode(Integer.toString((int) details[3])));
-            summaryRootElement.appendChild(e);
-
-
-            Element passengersRootElement = dom.createElement("passengers");
-            for(Passenger p : boardedPassengers) {
-                Element passenger = dom.createElement("passenger");
-
-                Element name = dom.createElement("name");
-                name.appendChild(dom.createTextNode(p.getFullName()));
-
-                Element seat = dom.createElement("seat");
-                seat.appendChild(dom.createTextNode(Integer.toString(p.getSeatNum())));
-
-                Element startStation = dom.createElement("start_station");
-                startStation.appendChild(dom.createTextNode((p.getStartStation())));
-
-                Element endStation = dom.createElement("end_station");
-                endStation.appendChild(dom.createTextNode((p.getEndStation())));
-
-                Element secondsInQueue = dom.createElement("second");
-                secondsInQueue.appendChild(dom.createTextNode(Integer.toString(p.getSecondsInQueue())));
-
-                passenger.appendChild(name);passenger.appendChild(seat);passenger.appendChild(startStation);passenger.appendChild(endStation);
-                passenger.appendChild(secondsInQueue);
-
-                passengersRootElement.appendChild(passenger);
-            }
             dom.appendChild(root);
             root.appendChild(passengersRootElement); root.appendChild(summaryRootElement);
             try {
@@ -679,29 +643,152 @@ public class TrainStation extends Application{
                 tr.setOutputProperty(OutputKeys.INDENT, "yes");
                 tr.setOutputProperty(OutputKeys.METHOD, "xml");
                 tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-//                tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "roles.dtd");
                 tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-                // send DOM to file
                 tr.transform(new DOMSource(dom),
                         new StreamResult(new FileOutputStream(path)));
 
             } catch (TransformerException te) {
                 te.printStackTrace();
-                System.out.println(te.getMessage());
             } catch (IOException ioe) {
                 ioe.printStackTrace();
-                System.out.println(ioe.getMessage());
             }
         } catch (ParserConfigurationException pce) {
             pce.printStackTrace();
-            System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
         }
+    }
+    private Element makePassengerElements(List<Passenger> boardedPassengers) {
+        Document dom = null;
+        try {
+            dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+        Element passengersRootElement = dom.createElement("passengers");
+        for(Passenger p : boardedPassengers) {
+            Element passenger = dom.createElement("passenger");
+
+            Element name = dom.createElement("name");
+            name.appendChild(dom.createTextNode(p.getFullName()));
+
+            Element seat = dom.createElement("seat");
+            seat.appendChild(dom.createTextNode(Integer.toString(p.getSeatNum())));
+
+            Element startStation = dom.createElement("start_station");
+            startStation.appendChild(dom.createTextNode((p.getStartStation())));
+
+            Element endStation = dom.createElement("end_station");
+            endStation.appendChild(dom.createTextNode((p.getEndStation())));
+
+            Element secondsInQueue = dom.createElement("second");
+            secondsInQueue.appendChild(dom.createTextNode(Integer.toString(p.getSecondsInQueue())));
+
+            passenger.appendChild(name);passenger.appendChild(seat);passenger.appendChild(startStation);passenger.appendChild(endStation);
+            passenger.appendChild(secondsInQueue);
+
+            passengersRootElement.appendChild(passenger);
+        }
+        return passengersRootElement;
+    }
+    private Element makeSummaryElements(float[] details) {
+        Document dom = null;
+        Element element;
+        try {
+            dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+        Element summaryRootElement = dom.createElement("summary");
+
+        element = dom.createElement("queue_length");
+        element.appendChild(dom.createTextNode(Integer.toString((int) details[0])));
+        summaryRootElement.appendChild(element);
+
+        element = dom.createElement("minimum_seconds");
+        element.appendChild(dom.createTextNode(Integer.toString((int) details[1])));
+        summaryRootElement.appendChild(element);
+
+        element = dom.createElement("maximum_seconds");
+        element.appendChild(dom.createTextNode(Integer.toString((int) details[2])));
+        summaryRootElement.appendChild(element);
+
+        element = dom.createElement("average_seconds");
+        element.appendChild(dom.createTextNode(Integer.toString((int) details[3])));
+        summaryRootElement.appendChild(element);
+
+        return summaryRootElement;
     }
 
 
+    // TABLE GUI
 
+    // Table GUI
+    private TableView<Passenger> makePassengerDetailTable(ObservableList<Passenger> passengers, String placeHolder, boolean boarded) {
+        //Table Populating
+        TableView<Passenger> tb = new TableView<>();
 
+        TableColumn<Passenger, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+
+        TableColumn<Passenger, Integer> seatColumn = new TableColumn<>("Seat");
+        seatColumn.setCellValueFactory(new PropertyValueFactory<>("seatNum"));
+
+        TableColumn<Passenger, String> startStationColumn = new TableColumn<>("Start");
+        startStationColumn.setCellValueFactory(new PropertyValueFactory<>("startStation"));
+
+        TableColumn<Passenger, String> endStationColumn = new TableColumn<>("End");
+        endStationColumn.setCellValueFactory(new PropertyValueFactory<>("endStation"));
+
+        TableColumn<Passenger, String> journeyColumn = new TableColumn<>("Journey");
+        journeyColumn.getColumns().addAll(startStationColumn, endStationColumn);
+
+        TableColumn<Passenger, Integer> secondsInQueueColumn = new TableColumn<>("Sec in queue");
+        secondsInQueueColumn.setCellValueFactory(new PropertyValueFactory<>("secondsInQueue"));
+
+        tb.setItems(passengers);
+        Label lblPH = new Label(placeHolder);
+        tb.setPlaceholder(lblPH);
+
+        if(boarded) {
+            tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn, secondsInQueueColumn);
+            return tb;
+        }
+        tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn);
+        return tb;
+//        tb.setSelectionModel(null);//throws error when sorting
+    }
+    private Pane makeTableCaption(String caption) {
+        HBox captionBox = new HBox();
+        captionBox.setAlignment(Pos.CENTER_LEFT);
+        Text title = new Text(caption);
+        HBox.setMargin(title, new Insets(0, 0, 5, 0));
+//        captionBox.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(222,222,222) 16%, rgb(232,232,232) 79%); -fx-border-width: 1px 1px 0px 1px; -fx-border-color: #c3c3c3");
+        title.setFill(Color.valueOf("#2e4a7d"));
+        title.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
+        captionBox.getChildren().add(title);
+
+        return captionBox;
+    }
+    private HBox makeTableRowColorInfo(String colorCode, String info) {
+        Label color = new Label();
+        color.setMinSize(15, 15);
+        color.setMaxSize(15, 15);
+        color.setStyle("-fx-background-color: " + colorCode);
+        GridPane.setHalignment(color, HPos.LEFT);
+        HBox.setMargin(color, new Insets(0, 0, 3, 0));
+//        GridPane.setConstraints(yello, 1, 1);
+
+        Label infoLabel = new Label(info);
+        GridPane.setHalignment(infoLabel, HPos.LEFT);
+        HBox.setMargin(infoLabel, new Insets(0, 0, 3,6));
+//        GridPane.setConstraints(yelloInfo, 1, 1);
+
+        HBox colorAndInfo = new HBox();
+        colorAndInfo.getChildren().addAll(color, infoLabel);
+        return colorAndInfo;
+    }
+
+    // Get Passengers From Queue, Waiting Room And Train(boarded)
     private ObservableList<Passenger> getSeatsInTrainQueue() {
         ObservableList<Passenger> passengers = FXCollections.observableArrayList();
         Passenger[] passengersInQueue = trainQueue.getQueue();
@@ -739,87 +826,11 @@ public class TrainStation extends Application{
         }
         return passengers;
     }
-    private TableView<Passenger> makePassengerDetailTable(ObservableList<Passenger> passengers, String placeHolder, boolean boarded) {
-        //Table Populating
-        TableView<Passenger> tb = new TableView<>();
-
-        TableColumn<Passenger, String> nameColumn = new TableColumn<>("Name");
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
-
-        TableColumn<Passenger, Integer> seatColumn = new TableColumn<>("Seat");
-        seatColumn.setCellValueFactory(new PropertyValueFactory<>("seatNum"));
-
-        TableColumn<Passenger, String> startStationColumn = new TableColumn<>("Start");
-        startStationColumn.setCellValueFactory(new PropertyValueFactory<>("startStation"));
 
 
-        TableColumn<Passenger, String> endStationColumn = new TableColumn<>("End");
-        endStationColumn.setCellValueFactory(new PropertyValueFactory<>("endStation"));
+    // ADD TO WAITING ROOM
 
-
-        TableColumn<Passenger, String> journeyColumn = new TableColumn<>("Journey");
-        journeyColumn.getColumns().addAll(startStationColumn, endStationColumn);
-
-        TableColumn<Passenger, Integer> secondsInQueueColumn = new TableColumn<>("Sec in queue");
-        secondsInQueueColumn.setCellValueFactory(new PropertyValueFactory<>("secondsInQueue"));
-
-        tb.setItems(passengers);
-        Label lblPH = new Label(placeHolder);
-        tb.setPlaceholder(lblPH);
-
-        if(boarded) {
-            tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn, secondsInQueueColumn);
-            return tb;
-        }
-        tb.getColumns().addAll(nameColumn, seatColumn, journeyColumn);
-        return tb;
-
-//        tb.setSelectionModel(null);//throws error when sorting
-
-    }
-    private Pane makeTableCaption(String caption) {
-        HBox captionBox = new HBox();
-        captionBox.setAlignment(Pos.CENTER_LEFT);
-        Text title = new Text(caption);
-        HBox.setMargin(title, new Insets(0, 0, 5, 0));
-//        captionBox.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(222,222,222) 16%, rgb(232,232,232) 79%); -fx-border-width: 1px 1px 0px 1px; -fx-border-color: #c3c3c3");
-        title.setFill(Color.valueOf("#2e4a7d"));
-        title.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
-        captionBox.getChildren().add(title);
-
-        return captionBox;
-    }
-    private HBox makeTableRowColorInfo(String colorCode, String info) {
-        Label color = new Label();
-        color.setMinSize(15, 15);
-        color.setMaxSize(15, 15);
-        color.setStyle("-fx-background-color: " + colorCode);
-        GridPane.setHalignment(color, HPos.LEFT);
-        HBox.setMargin(color, new Insets(0, 0, 3, 0));
-//        GridPane.setConstraints(yello, 1, 1);
-
-        Label infoLabel = new Label(info);
-        GridPane.setHalignment(infoLabel, HPos.LEFT);
-        HBox.setMargin(infoLabel, new Insets(0, 0, 3,6));
-//        GridPane.setConstraints(yelloInfo, 1, 1);
-
-        HBox colorAndInfo = new HBox();
-        colorAndInfo.getChildren().addAll(color, infoLabel);
-        return colorAndInfo;
-    }
-
-    //helper methods
-    private boolean confirm(String message) {
-        Scanner sc = new Scanner(System.in);
-        System.out.println(message);
-        String isConfirmed = sc.nextLine();
-        if(isConfirmed.equalsIgnoreCase("y") || isConfirmed.equalsIgnoreCase("yes")) {
-            return true;
-        }
-        System.out.println("Abored!");
-        return false;
-
-    }
+    // Event Handlers
     private void setActionOnAdd(List<Integer> toBeReserved, Stage stage) {
         boolean isSeatSelected = !toBeReserved.isEmpty();
         if(isSeatSelected){
@@ -852,6 +863,8 @@ public class TrainStation extends Application{
             clicked.remove(clicked.indexOf(Integer.parseInt(btn.getText())));
         }
     }
+
+    // Make GUI Components
     private static Button makeSeatButton(int i, int c, int r) {
         Button seatBtn = new Button("" + i);
         seatBtn.setMinSize(50, 50);
@@ -871,12 +884,8 @@ public class TrainStation extends Application{
         errorAlert.setContentText(message);
         errorAlert.show();
     }
-    private static void addToPassengerQueue(Passenger p, PassengerQueue queue, int totalAdded) {
-        try {
-            queue.enqueue(p);
-        } catch (Exception e) {
-        }
-    }
+
+    // ADD TO QUEUE
 
     private int addLateComersToQueue(int passengersToQueue) {
         int totalAdded = 0;
@@ -894,27 +903,21 @@ public class TrainStation extends Application{
                 }
             }
         } catch (Exception e) {
-            System.out.println(totalAdded + " Passengers added, since the queue is full");
             totalAdded = passengersToQueue;
-//            e.printStackTrace();
+            e.printStackTrace();
         }
         return totalAdded;
     }
     private int addToQueueFromWaitingRoom(int totalAdded, int passengersToQueue) {
         int remainingToAdd = passengersToQueue - totalAdded;
         int boardFrom = this.boardFrom;
-//        System.out.println(alreadyAdded);
-//        System.out.println(remainingToAdd);
+
         try {
             for (int i = boardFrom; i < boardFrom + remainingToAdd; i++) {
-//                System.out.println("iteration " + i);
-//                System.out.println("boardFrom " + (boardFrom));
-//                System.out.println("alreadyAdded " + alreadyAdded);
+
                 if (this.boardFrom == waitingRoom.length) {
-//                    System.out.println(alreadyAdded + "  passengers were added successfully");
                     break;
                 }
-//                System.out.println(waitingRoom[boardFrom]);
                 if (waitingRoom[i] != null) {
                     trainQueue.enqueue(waitingRoom[i]);
                     System.out.println("boardFrom: " + boardFrom + " seatNum - 1: " + (waitingRoom[i].getSeatNum() - 1));
@@ -924,19 +927,25 @@ public class TrainStation extends Application{
                 }
                 this.boardFrom += 1;
             }
-//            if(boardFrom != waitingRoom.length) {
-//                System.out.println(alreadyAdded + " passengers were added successfully");
-//            }
-//            if(totalAdded < passengersToQueue) {
-//                System.out.println(totalAdded + " Passengers were added since there's no passengers left to add");
-//            }
         } catch (Exception e) {
-            System.out.println(totalAdded + " Passengers added, since the queue is full");
             e.printStackTrace();
         }
         return totalAdded;
     }
 
+    // COMMON
+
+    private boolean confirm(String message) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println(message);
+        String isConfirmed = sc.nextLine();
+        if(isConfirmed.equalsIgnoreCase("y") || isConfirmed.equalsIgnoreCase("yes")) {
+            return true;
+        }
+        System.out.println("Abored!");
+        return false;
+
+    }
     private int getSeatNum() {
         int seatNum = 0;
         Scanner sc = new Scanner(System.in);
@@ -956,7 +965,7 @@ public class TrainStation extends Application{
             } catch (InputMismatchException e) {
                 retry += 1;
                 System.out.println("Only integers allowed");
-                sc.next();
+                sc.next(); // sc.nextInt, sc.nextFloat doesnt work consecatively
             }
         }
         return 0;
