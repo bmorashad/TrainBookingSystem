@@ -61,7 +61,7 @@ public class PassengerQueue {
         if(!isEmpty()) {
             int indexOfSeatNum = findSeat(seatNum);
             if (indexOfSeatNum >= 0) {
-                if (queue[indexOfSeatNum].getFullName() == fullName) {
+                if (queue[indexOfSeatNum].getFullName().equalsIgnoreCase(fullName)) {
                     dltPassenger = queue[indexOfSeatNum];
                     for (int j = 0; j < size; j++) {
                         queue[(j + indexOfSeatNum) % maxSize] = queue[(j + indexOfSeatNum + 1) % maxSize];
