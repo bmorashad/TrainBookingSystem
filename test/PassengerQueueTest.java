@@ -1,3 +1,4 @@
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -8,8 +9,13 @@ public class PassengerQueueTest {
 
     private PassengerQueue p;
 
+    @Before
+    public void setUp() {
+
+    }
+
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @org.junit.Test
     public void testEnqueue() throws Exception {
@@ -29,7 +35,7 @@ public class PassengerQueueTest {
     }
 
     @Test
-    public void testEnqueueException() throws Exception {
+    public void testQueueException() throws Exception {
         p = new PassengerQueue(2);
         exception.expect(Exception.class);
         p.enqueue(new Passenger("Fara", 2));
