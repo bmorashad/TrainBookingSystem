@@ -113,11 +113,9 @@ public class TrainStation extends Application{
         } finally {
             sc.close();
         }
-        System.out.println(Arrays.toString(BOOKED_PASSENGERS));
     }
 
     public void addArrivedPassengers() {
-        System.out.println("tQ size: " + trainQueue.getSize());
         Stage stage = new Stage();
 
         GridPane grid = new GridPane();
@@ -292,45 +290,47 @@ public class TrainStation extends Application{
 
     public void loadFromFile() {
         File file = new File("data/session-log/train-station-recent-sesstion.txt");
-        Scanner sc;
-        int[] seatStat;
-        int[] boardedSeconds = null;
-        int[] boardedSeatNumArr = null;
-        Passenger[] waitintRoom = new Passenger[42];
-        List<Passenger> lateComers = new ArrayList<>();
-        PassengerQueue trainQueue = new PassengerQueue(this.trainQueue.getMaxSize());
-        int boardFrom;
-        String seatStatString;
-        int lastBoarded;
-        String boardedSecondsString;
-        try {
-            sc = new Scanner(file);
-            lastBoarded = Integer.parseInt(sc.nextLine());
-            seatStatString = sc.nextLine();
-            seatStat = getIntArrFromFile(seatStatString);
-            boardFrom = Integer.parseInt(sc.nextLine());
-            if(sc.hasNext()) {
-                boardedSecondsString = sc.nextLine();
-                boardedSeconds = getIntArrFromFile(boardedSecondsString);
-                boardedSeatNumArr =new int[boardedSeconds.length];
-            }
-            boolean isValidStates = validateLoadedSeatStat(seatStat, lateComers, boardedSeatNumArr, waitintRoom, trainQueue);
-            if(isValidStates) {
-                this.seatStat = seatStat;
-                this.waitingRoom = waitintRoom;
-                this.boardFrom = boardFrom;
-                this.lastBoarded =lastBoarded;
-                this.lateComers = lateComers;
-                this.trainQueue = trainQueue;
-                setBoardedPassengersSecondsInQueue(boardedSeatNumArr, boardedSeconds);
-            }
+        boolean isConfirmed = confirm("Are you sure(y/n)? (current session will be changed to most recent session saved");
+        if(isConfirmed) {
+            Scanner sc;
+            int[] seatStat;
+            int[] boardedSeconds = null;
+            int[] boardedSeatNumArr = null;
+            Passenger[] waitintRoom = new Passenger[42];
+            List<Passenger> lateComers = new ArrayList<>();
+            PassengerQueue trainQueue = new PassengerQueue(this.trainQueue.getMaxSize());
+            int boardFrom;
+            String seatStatString;
+            int lastBoarded;
+            String boardedSecondsString;
+            try {
+                sc = new Scanner(file);
+                lastBoarded = Integer.parseInt(sc.nextLine());
+                seatStatString = sc.nextLine();
+                seatStat = getIntArrFromFile(seatStatString);
+                boardFrom = Integer.parseInt(sc.nextLine());
+                if (sc.hasNext()) {
+                    boardedSecondsString = sc.nextLine();
+                    boardedSeconds = getIntArrFromFile(boardedSecondsString);
+                    boardedSeatNumArr = new int[boardedSeconds.length];
+                }
+                boolean isValidStates = validateLoadedSeatStat(seatStat, lateComers, boardedSeatNumArr, waitintRoom, trainQueue);
+                if (isValidStates) {
+                    this.seatStat = seatStat;
+                    this.waitingRoom = waitintRoom;
+                    this.boardFrom = boardFrom;
+                    this.lastBoarded = lastBoarded;
+                    this.lateComers = lateComers;
+                    this.trainQueue = trainQueue;
+                    setBoardedPassengersSecondsInQueue(boardedSeatNumArr, boardedSeconds);
+                }
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
     public void runSimulation() {
@@ -459,7 +459,6 @@ public class TrainStation extends Application{
         boolean isValid = true;
         for(int i = 0, j = 0; i < seatStat.length; i++) {
             int stat = seatStat[i];
-            System.out.println("i " + i);
             if(this.seatStat[i] != 0 && stat == 0 || this.seatStat[i] == 0 && stat != 0){
                 System.out.println("Aborting! Mismatch with currently booked passengers detected...");
                 isValid= false;
@@ -487,13 +486,10 @@ public class TrainStation extends Application{
         int sepI = fileIntList.indexOf(",");
         int i = 0;
         while(sepI != -1) {
-            System.out.println("i " + i);
             int num = Integer.parseInt(fileIntList.substring(preSepI + 1, sepI));
             intList.add(num);
             preSepI = sepI;
-            System.out.println("sepIB " + sepI);
             sepI = fileIntList.indexOf(",", sepI + 1);
-            System.out.println("sepIA " + sepI);
             i++;
         }
         int[] intArr = new int[intList.size()];
@@ -787,8 +783,6 @@ public class TrainStation extends Application{
         for(int i = lastBoarded; i < boardFrom; i++) {
             if(seatStat[i] == -1) {
                 passengers.add(BOOKED_PASSENGERS[i]);
-            } else {
-                System.out.println("yes");
             }
         }
         bubbleSortArr(passengers);
