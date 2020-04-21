@@ -116,7 +116,7 @@ public class PassengerQueue {
         int from = head;
         int to = tail;
         do {
-            if(to >= from) {
+            if(to > from) {
                 search_index = (to - from)  / 2 + from;
             } else {
                 search_index = (((maxSize - from) + to)/2 + from) % maxSize;
