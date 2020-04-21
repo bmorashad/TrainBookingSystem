@@ -1,3 +1,4 @@
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
@@ -6,6 +7,9 @@ import static org.junit.Assert.*;
 public class PassengerQueueTest {
 
     private PassengerQueue p;
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @org.junit.Test
     public void testEnqueue() throws Exception {
@@ -24,9 +28,10 @@ public class PassengerQueueTest {
         assertEquals(result, p.getSize());
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testEnqueueException() throws Exception {
         p = new PassengerQueue(2);
+        exception.expect(Exception.class);
         p.enqueue(new Passenger("Fara", 2));
         p.enqueue(new Passenger("Fara", 2));
         p.enqueue(new Passenger("Fara", 2));
@@ -52,7 +57,7 @@ public class PassengerQueueTest {
     }
 
     @org.junit.Test
-    public void testDeleteEmpty() throws Exception{
+    public void testDeleteEmpty() {
         p = new PassengerQueue(3);
         Passenger deleted = p.delete("Tharindu", 2);
         assertEquals(null, deleted);
