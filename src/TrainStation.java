@@ -633,11 +633,11 @@ public class TrainStation extends Application{
             dom = db.newDocument();
             Element root = dom.createElement("queue_simualtion");
 
-            Element summaryRootElement = makeSummaryElements(details);
-            Element passengersRootElement = makePassengerElements(boardedPassengers);
+            Element summaryRootElement = makeSummaryElements(details, dom);
+            Element passengersRootElement = makePassengerElements(boardedPassengers, dom);
 
-            dom.appendChild(root);
             root.appendChild(passengersRootElement); root.appendChild(summaryRootElement);
+            dom.appendChild(root);
             try {
                 Transformer tr = TransformerFactory.newInstance().newTransformer();
                 tr.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -657,13 +657,7 @@ public class TrainStation extends Application{
             pce.printStackTrace();
         }
     }
-    private Element makePassengerElements(List<Passenger> boardedPassengers) {
-        Document dom = null;
-        try {
-            dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
+    private Element makePassengerElements(List<Passenger> boardedPassengers, Document dom) {
         Element passengersRootElement = dom.createElement("passengers");
         for(Passenger p : boardedPassengers) {
             Element passenger = dom.createElement("passenger");
@@ -690,14 +684,9 @@ public class TrainStation extends Application{
         }
         return passengersRootElement;
     }
-    private Element makeSummaryElements(float[] details) {
-        Document dom = null;
+    private Element makeSummaryElements(float[] details, Document dom) {
         Element element;
-        try {
-            dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
+
         Element summaryRootElement = dom.createElement("summary");
 
         element = dom.createElement("queue_length");
