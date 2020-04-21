@@ -242,7 +242,6 @@ public class TrainStation extends Application{
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter name of the passenger: ");
         String name = sc.nextLine();
-        System.out.println("Enter seat number of the passenger: ");
         int seatNum = getSeatNum();
         if(seatNum > 0) {
             boolean isConfirmed = confirm("Are sure you want to proceed(y/n)? ");
