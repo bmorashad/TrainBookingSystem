@@ -828,7 +828,6 @@ public class TrainStation extends Application{
                 }
                 seatStat[seatNum-1] = 1;
             }
-            System.out.println(Arrays.toString(waitingRoom));
             stage.close();
         } else {
             throwErrorAlert("No seats are selected to book", "You must select atleast one \n seat to book");
